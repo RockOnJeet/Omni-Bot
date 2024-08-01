@@ -57,7 +57,7 @@ volatile int Offset[2] = {0, 0}, Origin[2] = {0, 0};
 int errorAxis = xy;
 
 MD_REncoder encoder[2] = {MD_REncoder(2, 3), MD_REncoder(19, 18)};
-Interpolator mainRamp;
+Interpolator fwdRamp, turnRamp;
 
 void setup() {
   Serial.begin(115200);
@@ -88,6 +88,7 @@ void loop() {
       Origin[y] = Offset[y];
       prevC = c;
     } else if ((c == 'S') && prevC != c) {
+      move('S');
       errorAxis = xy;
       getEncoderData(x);
       getEncoderData(y);
@@ -95,71 +96,99 @@ void loop() {
       Origin[y] = Offset[y];
       prevC = c;
     }
+    if (c != 'S')
     move(c);
   }
+
   getEncoderData(errorAxis);
   correctError(errorAxis);
 }
 
 void move(char c) {
+  Serial.println(c);
   switch (c) {
     case 'F':
-      mainRamp.init(0, 255, accelTime);
-      // Serial.print(mainRamp.getValue());
+      fwdRamp.init(0, 255, accelTime);
+      // Serial.print(fwdRamp.getValue());
       digitalWrite(motors[2].dirPin, HIGH);
       digitalWrite(motors[1].dirPin, LOW);
       for (byte i = 1; i < 3; i++) {
-        analogWrite(motors[i].pwmPin, mainRamp.getValue());
+        analogWrite(motors[i].pwmPin, fwdRamp.getValue());
       }
       break;
     case 'B':
-      mainRamp.init(0, 255, accelTime);
-      // Serial.print(mainRamp.getValue());
+      fwdRamp.init(0, 255, accelTime);
+      // Serial.print(fwdRamp.getValue());
       digitalWrite(motors[2].dirPin, LOW);
       digitalWrite(motors[1].dirPin, HIGH);
       for (byte i = 1; i < 3; i++) {
-        analogWrite(motors[i].pwmPin, mainRamp.getValue());
+        analogWrite(motors[i].pwmPin, fwdRamp.getValue());
       }
       break;
     case 'L':
-      mainRamp.init(0, 255, accelTime);
-      // Serial.print(mainRamp.getValue());
+      turnRamp.init(0, 255, accelTime);
+      // Serial.print(fwdRamp.getValue());
       digitalWrite(motors[0].dirPin, HIGH);
-      analogWrite(motors[0].pwmPin, mainRamp.getValue());
+      analogWrite(motors[0].pwmPin, turnRamp.getValue());
       for (byte i = 1; i < 3; i++) {
         digitalWrite(motors[i].dirPin, LOW);
-        analogWrite(motors[i].pwmPin, ((byte)mainRamp.getValue() / sqrt(2)));
+        analogWrite(motors[i].pwmPin, ((byte)turnRamp.getValue() / sqrt(2)));
       }
       break;
     case 'R':
-      mainRamp.init(0, 255, accelTime);
-      // Serial.print(mainRamp.getValue());
+      turnRamp.init(0, 255, accelTime);
+      // Serial.print(fwdRamp.getValue());
       digitalWrite(motors[0].dirPin, LOW);
-      analogWrite(motors[0].pwmPin, mainRamp.getValue());
+      analogWrite(motors[0].pwmPin, turnRamp.getValue());
       for (byte i = 1; i < 3; i++) {
         digitalWrite(motors[i].dirPin, HIGH);
-        analogWrite(motors[i].pwmPin, ((byte)mainRamp.getValue() / sqrt(2)));
+        analogWrite(motors[i].pwmPin, ((byte)turnRamp.getValue() / sqrt(2)));
       }
       break;
     case 'S':
       // Serial.print(c);
-      mainRamp.reset();
+      fwdRamp.reset();
+      turnRamp.reset();
       for (byte i = 0; i < 3; i++) {
         digitalWrite(motors[i].dirPin, LOW);
         analogWrite(motors[i].pwmPin, 0);
       }
       break;
+    case 'Q':
+      turnRamp.init(0, 255, accelTime);
+      digitalWrite(motors[0].dirPin, HIGH);
+      analogWrite(motors[0].pwmPin, turnRamp.getValue());
+      break;
+    case 'E':
+      turnRamp.init(0, 255, accelTime);
+      digitalWrite(motors[0].dirPin, LOW);
+      analogWrite(motors[0].pwmPin, turnRamp.getValue());
+      break;
+    case 'C':
+      turnRamp.reset();
+      digitalWrite(motors[0].dirPin, LOW);
+      analogWrite(motors[0].pwmPin, 0);
+      break;
   }
 }
 
 void getEncoderData(int axis) {
+  if (axis == xy) {
+    getEncoderData(x);
+    getEncoderData(y);
+    return;
+  }
   byte _axisData = encoder[axis].read();
   if (_axisData != DIR_NONE) {
     Offset[axis] += _axisData == DIR_CW ? 1 : -1;
   }
+  // Serial.print(axis);
+  // Serial.print(": ");
+  // Serial.println(Offset[axis]);
 }
 
 void correctError(int axis) {
+  static bool isMoving[2] = {false, false};
   int _offSet[2] = {Offset[x], Offset[y]};
   if (axis == xy) {
     correctError(x);
@@ -168,24 +197,30 @@ void correctError(int axis) {
   }
   _offSet[axis] = Origin[axis] - _offSet[axis];
   if (_offSet[axis] > 7) {
+    isMoving[axis] = true;
     switch (axis) {
       case x:
-        move('L');
+        move('E');
         break;
       case y:
-        move('B');
+        // move('F');
         break;
     }
   } else if (_offSet[axis] < -7) {
+    isMoving[axis] = true;
     switch (axis) {
       case x:
-        move('R');
+        move('Q');
         break;
       case y:
-        move('F');
+        // move('B');
         break;
     }
   } else {
-    move('S');
+    if (isMoving[axis]) {
+      move('C');
+      isMoving[axis] = false;
+    }
+    // move('S');
   } 
 }
