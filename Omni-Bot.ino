@@ -1,115 +1,165 @@
-// #include <SoftwareSerial.h>
+class Interpolator {
+ private:
+  byte iterator = 0;
+  byte _target = 0;
+  unsigned long _time = 0;
+  unsigned long _ms = 0;
+  float slope = 0;
 
-// SoftwareSerial Serial(10, 11); // RX, TX pins for Bluetooth module
+ public:
+  Interpolator() {}
 
-// Define the PWM and DIR pins for each motor
+  void init(byte start = 0, byte target = 0, unsigned long ms = 0) {
+    if (_target == 0) {  // first init
+      _target = target;
+      iterator = start;
+      _time = millis() + ms;
+      _ms = millis();
+      slope = (float)(_target - iterator) / (float)(_time - _ms);
+    }
+  }
 
-const int pwmPin1 = 9;  // Replace with the actual PWM pin for motor 1
-const int dirPin1 = 5;  // Replace with the actual DIR pin for motor 1
+  void update(byte target, unsigned long ms = 0) {
+    if (ms > 0) {
+      reset();
+      init(iterator, target, ms);
+    } else {
+      _target = target;
+    }
+  }
 
-const int pwmPin2 = 10;  // Replace with the actual PWM pin for motor 2
-const int dirPin2 = 6;   // Replace with the actual DIR pin for motor 2
+  byte getValue() {
+    return millis() > _time ? _target : (slope * (millis() - _ms));
+  }
 
-const int pwmPin3 = 11;  // Replace with the actual PWM pin for motor 3
-const int dirPin3 = 7;   // Replace with the actual DIR pin for motor 3
+  void reset() {
+    _target = 0;
+    iterator = 0;
+    _time = 0;
+    _ms = 0;
+    slope = 0;
+  }
+};
+
+typedef struct motor {
+  byte pwmPin;
+  byte dirPin;
+};
+
+const motor motors[3] = {{5, 44}, {4, 26}, {9, 37}};
+const uint16_t accelTime = 2000;
+
+volatile int xCounter, yCounter;
+
+Interpolator mainRamp, subRamp;
 
 void setup() {
-  // Serial.begin(9600);
-  Serial.begin(9600);
-  pinMode(pwmPin1, OUTPUT);
-  pinMode(dirPin1, OUTPUT);
-  pinMode(pwmPin2, OUTPUT);
-  pinMode(dirPin2, OUTPUT);
-  pinMode(pwmPin3, OUTPUT);
-  pinMode(dirPin3, OUTPUT);
+  Serial.begin(115200);
+  Serial2.begin(9600);
+  for (int i = 0; i < 3; i++) {
+    pinMode(motors[i].pwmPin, OUTPUT);
+    pinMode(motors[i].dirPin, OUTPUT);
+  }
+  pinMode(2, INPUT_PULLUP);
+  pinMode(3, INPUT_PULLUP);
+  pinMode(18, INPUT_PULLUP);
+  pinMode(19, INPUT_PULLUP);
+  attachInterrupt(digitalPinToInterrupt(2), xFall, RISING);
+  attachInterrupt(digitalPinToInterrupt(3), xRise, RISING);
+  attachInterrupt(digitalPinToInterrupt(18), yRise, RISING);
+  attachInterrupt(digitalPinToInterrupt(19), yFall, RISING);
 }
 
 void loop() {
-  if (Serial.available() > 0) {
-    char command = Serial.read();
-    // Control commands from Bluetooth
-    switch (command) {
-      case 'F':  // Forward
-        Serial.print(command);
-        digitalWrite(dirPin1, HIGH);
-        analogWrite(pwmPin1, 0);
-        digitalWrite(dirPin2, LOW);
-        analogWrite(pwmPin2, 255);
-        digitalWrite(dirPin3, HIGH);
-        analogWrite(pwmPin3, 255);
-        break;
-      case 'B':  // Backward
-        digitalWrite(dirPin1, HIGH);
-        analogWrite(pwmPin1, 0);
-        digitalWrite(dirPin2, HIGH);
-        analogWrite(pwmPin2, 225);
-        digitalWrite(dirPin3, LOW);
-        analogWrite(pwmPin3, 225);
-        Serial.print(command);
-        break;
-      case 'L':  // Left
-        Serial.print(command);
-        digitalWrite(dirPin1, HIGH);
-        analogWrite(pwmPin1, 254);
-        digitalWrite(dirPin2, LOW);
-        analogWrite(pwmPin2, 126);
-        digitalWrite(dirPin3, LOW);
-        analogWrite(pwmPin3, 126);
-        break;
-      case 'R':
-        digitalWrite(dirPin1, LOW);
-        analogWrite(pwmPin1, 254);
-        digitalWrite(dirPin2, HIGH);
-        analogWrite(pwmPin2, 126);
-        digitalWrite(dirPin3, HIGH);
-        analogWrite(pwmPin3, 126);
-        Serial.print(command);
-        break;
-      case 'G':
-        Serial.print(command);
-        digitalWrite(dirPin1, HIGH);
-        analogWrite(pwmPin1, 255);
-        digitalWrite(dirPin2, LOW);
-        analogWrite(pwmPin2, 255);
-        digitalWrite(dirPin3, HIGH);
-        analogWrite(pwmPin3, 127.5);
-        break;
-      case 'H':
-        digitalWrite(dirPin1, HIGH);
-        analogWrite(pwmPin1, 255);
-        digitalWrite(dirPin2, HIGH);
-        analogWrite(pwmPin2, 127.5);
-        digitalWrite(dirPin3, LOW);
-        analogWrite(pwmPin3, 255);
-        Serial.print(command);
-        break;
-      case 'I':
-        digitalWrite(dirPin1, LOW);
-        analogWrite(pwmPin1, 255);
-        digitalWrite(dirPin2, LOW);
-        analogWrite(pwmPin2, 127.5);
-        digitalWrite(dirPin3, HIGH);
-        analogWrite(pwmPin3, 255);
-        Serial.print(command);
-        break;
-      case 'J':
-        digitalWrite(dirPin1, LOW);
-        analogWrite(pwmPin1, 255);
-        digitalWrite(dirPin2, HIGH);
-        analogWrite(pwmPin2, 255);
-        digitalWrite(dirPin3, LOW);
-        analogWrite(pwmPin3, 127.5);
-        Serial.print(command);
-        break;
-      case 'S':  // Stop
-        Serial.print(command);
-        digitalWrite(dirPin1, HIGH);
-        analogWrite(pwmPin1, 0);
-        digitalWrite(dirPin2, LOW);
-        analogWrite(pwmPin2, 0);
-        digitalWrite(dirPin3, LOW);
-        analogWrite(pwmPin3, 0);
-        break;
-    }
+  if (Serial2.available() > 0) {
+    char c = Serial2.read();
+    move(c);
+    Serial.print(xCounter);
+    Serial.print(",");
+    Serial.println(yCounter);
+  }
+}
+
+void move(char c) {
+  switch (c) {
+    case 'F':
+      mainRamp.init(0, 255, accelTime);
+      // Serial.print(mainRamp.getValue());
+      digitalWrite(motors[2].dirPin, HIGH);
+      digitalWrite(motors[1].dirPin, LOW);
+      for (byte i = 1; i < 3; i++) {
+        analogWrite(motors[i].pwmPin, mainRamp.getValue());
+      }
+      break;
+    case 'B':
+      mainRamp.init(0, 255, accelTime);
+      // Serial.print(mainRamp.getValue());
+      digitalWrite(motors[2].dirPin, LOW);
+      digitalWrite(motors[1].dirPin, HIGH);
+      for (byte i = 1; i < 3; i++) {
+        analogWrite(motors[i].pwmPin, mainRamp.getValue());
+      }
+      break;
+    case 'L':
+      mainRamp.init(0, 200, accelTime);
+      subRamp.init(0, 255, accelTime);
+      subRamp.update(180);
+      // Serial.print(mainRamp.getValue());
+      digitalWrite(motors[0].dirPin, HIGH);
+      analogWrite(motors[0].pwmPin, mainRamp.getValue());
+      for (byte i = 1; i < 3; i++) {
+        digitalWrite(motors[i].dirPin, LOW);
+        analogWrite(motors[i].pwmPin, subRamp.getValue());
+      }
+      break;
+    case 'R':
+      mainRamp.init(0, 200, accelTime);
+      subRamp.init(0, 255, accelTime);
+      subRamp.update(180);
+      // Serial.print(mainRamp.getValue());
+      digitalWrite(motors[0].dirPin, LOW);
+      analogWrite(motors[0].pwmPin, mainRamp.getValue());
+      for (byte i = 1; i < 3; i++) {
+        digitalWrite(motors[i].dirPin, HIGH);
+        analogWrite(motors[i].pwmPin, subRamp.getValue());
+      }
+      break;
+    case 'S':
+      // Serial.print(c);
+      mainRamp.reset();
+      subRamp.reset();
+      for (byte i = 0; i < 3; i++) {
+        digitalWrite(motors[i].dirPin, LOW);
+        analogWrite(motors[i].pwmPin, 0);
+      }
+      break;
+  }
+}
+
+void xRise() {
+  if (digitalRead(2) == LOW) {
+    // Serial.print("xRise");
+    xCounter++;
+  }
+}
+
+void xFall() {
+  if (digitalRead(3) == LOW) {
+    // Serial.print("xFall");
+    xCounter--;
+  }
+}
+
+void yRise() {
+  if (digitalRead(19) == LOW) {
+    // Serial.print("yRise");
+    yCounter++;
+  }
+}
+
+void yFall() {
+  if (digitalRead(18) == LOW) {
+    // Serial.print("yFall");
+    yCounter--;
   }
 }
