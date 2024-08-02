@@ -51,7 +51,8 @@ typedef struct motor {
 typedef enum { xy = -1, x, y } axis;
 
 const motor motors[3] = {{5, 44}, {4, 26}, {9, 37}};
-const uint16_t accelTime = 1500;
+const uint16_t accelTime = 1000;
+const byte ERR_THR = 15;
 
 volatile int Offset[2] = {0, 0}, Origin[2] = {0, 0};
 int errorAxis = xy;
@@ -196,7 +197,7 @@ void correctError(int axis) {
     return;
   }
   _offSet[axis] = Origin[axis] - _offSet[axis];
-  if (_offSet[axis] > 7) {
+  if (_offSet[axis] > ERR_THR) {
     isMoving[axis] = true;
     switch (axis) {
       case x:
@@ -206,7 +207,7 @@ void correctError(int axis) {
         // move('F');
         break;
     }
-  } else if (_offSet[axis] < -7) {
+  } else if (_offSet[axis] < -ERR_THR) {
     isMoving[axis] = true;
     switch (axis) {
       case x:
