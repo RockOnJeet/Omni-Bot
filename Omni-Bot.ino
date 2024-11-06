@@ -1,47 +1,91 @@
-#include <MD_REncoder.h>
+#include <SoftwareSerial.h>
 
-volatile int xCounter, yCounter, X, Y;
+typedef enum {
+  CW = 0,
+  CCW = 1
+} Direction;
 
-MD_REncoder encoder[2] = {MD_REncoder(2, 3), MD_REncoder(19, 18)};
+class Motor {
+  private:
+    byte pwmPin;
+    byte dirPin;
+    byte motorPWM;
+    Direction motorDirection;
+  
+  public:
+    Motor(byte pwmPin, byte dirPin) {
+      this->pwmPin = pwmPin;
+      this->dirPin = dirPin;
+      motorPWM = 0;
+    }
+  
+    void setSpeed(byte PWM) {
+      motorPWM = PWM;
+      analogWrite(pwmPin, motorPWM);
+    }
+
+    void setDirection(bool direction) {
+      digitalWrite(dirPin, (bool)direction);
+    }
+
+    void stop() {
+      motorPWM = 0;
+      analogWrite(pwmPin, motorPWM);
+    }
+};
+
+Motor motorA(5, 8);
+Motor motorB(6, 9);
+Motor motorC(7, 10);
+
+SoftwareSerial BLE(7, 6); // RX, TX
 
 void setup() {
   Serial.begin(115200);
-  encoder[0].begin();
-  encoder[1].begin();
-  Serial.println("Ready");
+  BLE.begin(115200);
+  Serial.println("Begin!");
 }
 
 void loop() {
-  getEncodeData();
-}
-
-void getEncodeData() {
-  byte x = encoder[0].read();
-  byte y = encoder[1].read();
-  if (x != DIR_NONE) {
-    // Serial.print(x == DIR_CW ? "\n+1x" : "\n-1x");
-    xCounter += x == DIR_CW ? 1 : -1;
-    if (xCounter > 400 || xCounter < -400) {
-      if (xCounter > 400)
-        X++;
-      else
-        X--;
-      Serial.print("XRevs: ");
-      Serial.println(X);
-      xCounter = 0;
-    }
-  }
-  if (y != DIR_NONE) {
-    // Serial.print(y == DIR_CW ? "\n+1y" : "\n-1y");
-    yCounter += y == DIR_CW ? 1 : -1;
-    if (yCounter > 400 || yCounter < -400) {
-      if (yCounter > 400)
-        Y++;
-      else
-        Y--;
-      Serial.print("YRevs: ");
-      Serial.println(Y);
-      yCounter = 0;
+  if (BLE.available()) {
+    char command = BLE.read();
+    Serial.println(command);
+    switch (command) {
+      case 'F':
+        motorA.stop();
+        motorB.setDirection(CW);
+        motorB.setSpeed(255);
+        motorC.setDirection(CCW);
+        motorC.setSpeed(255);
+        break;
+      case 'B':
+        motorA.stop();
+        motorB.setDirection(CCW);
+        motorB.setSpeed(255);
+        motorC.setDirection(CW);
+        motorC.setSpeed(255);
+        break;
+      case 'L':
+        motorA.setDirection(CW);
+        motorA.setSpeed(255);
+        motorB.setDirection(CW);
+        motorB.setSpeed(255);
+        motorC.setDirection(CW);
+        motorC.setSpeed(255);
+        break;
+      case 'R':
+        motorA.setDirection(CCW);
+        motorA.setSpeed(255);
+        motorB.setDirection(CCW);
+        motorB.setSpeed(255);
+        motorC.setDirection(CCW);
+        motorC.setSpeed(255);
+        break;
+      default:
+        motorA.stop();
+        motorB.stop();
+        motorC.stop();
+        break;
     }
   }
 }
