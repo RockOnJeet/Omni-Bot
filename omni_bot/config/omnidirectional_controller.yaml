@@ -1,0 +1,34 @@
+controller_manager:
+  ros__parameters:
+    update_rate: 20  # Hz
+    use_sim_time: true
+
+    joint_state_broadcaster:
+      type: joint_state_broadcaster/JointStateBroadcaster
+
+    omnidirectional_controller:
+      type: omnidirectional_controllers/OmnidirectionalController
+
+omnidirectional_controller:
+  ros__parameters:
+    wheel_names: 
+      - front_wheel_joint
+      - left_wheel_joint
+      - right_wheel_joint
+
+    robot_radius: 0.6062 # distance from robot's center to wheel's center
+    wheel_radius: 0.076
+    gamma: 120.0 # angle between the wheel and the robot center
+
+    publish_rate: 50.0
+    odom_frame_id: odom
+    base_frame_id: base_link
+    # pose_covariance_diagonal : [0.001, 0.001, 0.001, 0.001, 0.001, 0.01]  # Shows covariance (uncertainty) of the pose
+    # twist_covariance_diagonal: [0.001, 0.001, 0.001, 0.001, 0.001, 0.01]  # Shows covariance (uncertainty) of the twist
+    # odom_numeric_integration_method: runge_kutta2
+
+    open_loop: true  # If true, the controller will not use the odometry to estimate the robot's pose
+    enable_odom_tf: true
+
+    cmd_vel_timeout: 0.35  # If we don't receive a cmd_vel message for this time, we stop the robot
+    use_stamped_vel: false  # If true, the controller will use the stamped velocity instead of the twist

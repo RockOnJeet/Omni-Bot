@@ -1,0 +1,119 @@
+<?xml version="1.0"?>
+<robot xmlns:xacro="http://www.ros.org/wiki/xacro">
+  <!-- Variables -->
+  <xacro:property name="distance_to_roller_center" value="0.065"/>
+  <xacro:property name="inter_wheel_gap" value="0.02"/>
+
+  <!-- Roller Spawn Macro -->
+  <xacro:macro name="insert_roller" params="parent theta prefix suffix">
+    <joint name="${prefix}_roller_${suffix}_joint" type="continuous">
+      <origin xyz="${distance_to_roller_center*cos(theta)} ${distance_to_roller_center*sin(theta)} 0.0" rpy="0.0 0.0 ${theta-pi/2}"/>
+      <parent link="${parent}"/>
+      <child link="${prefix}_roller_${suffix}_link"/>
+      <axis xyz="1.0 0.0 0.0"/>
+      <!-- <dynamics friction="0.1"/> -->
+    </joint>
+    <link name="${prefix}_roller_${suffix}_link">
+      <visual>
+        <geometry>
+            <mesh filename="file://$(find omni_bot)/description/meshes/omni_wheel_roller.stl"/>
+        </geometry>
+        <material name="black">
+            <color rgba="0.0 0.0 0.0 1.0"/>
+        </material>
+      </visual>
+      <collision>
+          <origin rpy="0.0 ${pi/2} 0.0"/>
+          <geometry>
+              <cylinder radius="0.0095" length="0.018"/>  <!-- CAD values -->
+          </geometry>
+      </collision>
+      <inertial>
+          <mass value="0.008"/>
+          <inertia ixx="3.111e-7"
+                    ixy="0.0"
+                    ixz="0.0"
+                    iyy="3.600e-7"
+                    iyz="0.0"
+                    izz="3.600e-7"/>
+      </inertial>
+    </link>
+    <gazebo reference="${prefix}_roller_${suffix}_link">
+      <material>Gazebo/Black</material>
+    </gazebo>
+  </xacro:macro>
+
+  <!-- Half Wheel Spawn Macro -->
+  <xacro:macro name="insert_wheel" params="parent reflect prefix suffix">
+    <joint name="${prefix}_wheel${suffix}_joint" type="fixed">
+      <origin xyz="0.0 0.0 ${reflect * inter_wheel_gap/2}" rpy="0.0 0.0 ${suffix * 2*pi/28}"/>
+      <parent link="${parent}"/>
+      <child link="${prefix}_wheel${suffix}_link"/>
+    </joint>
+    <link name="${prefix}_wheel${suffix}_link">
+      <visual>
+        <origin rpy="${pi/2} 0.0 ${2*pi/28}"/>
+        <geometry>
+          <mesh filename="file://$(find omni_bot)/description/meshes/omni_wheel_plate.stl"/>
+        </geometry>
+        <material name="gray">
+          <color rgba="0.5 0.5 0.5 1.0"/>
+        </material>
+      </visual>
+      <!-- <collision>
+                <origin rpy="${pi/2} 0.0 ${2*pi/28}"/>
+                <geometry>
+                    <mesh filename="file://$(find omni_bot)/description/meshes/omni_wheel_plate.stl"/>
+                </geometry>
+      </collision> -->
+      <inertial>
+        <origin rpy="${pi/2} 0.0 ${2*pi/28}"/>
+        <mass value="0.21"/>
+        <inertia ixx="2.746e-4"
+                  ixy="0.0"
+                  ixz="0.0"
+                  iyy="0.001"
+                  iyz="0.0"
+                  izz="2.746e-4"/>
+      </inertial>
+    </link>
+    <gazebo reference="${prefix}_wheel${suffix}_link">
+      <material>Gazebo/Gray</material>
+    </gazebo>
+
+    <xacro:insert_roller parent="${prefix}_wheel${suffix}_link" theta="0" prefix="${prefix}_wheel${suffix}" suffix="1"/>
+    <xacro:insert_roller parent="${prefix}_wheel${suffix}_link" theta="${pi/7}" prefix="${prefix}_wheel${suffix}" suffix="2"/>
+    <xacro:insert_roller parent="${prefix}_wheel${suffix}_link" theta="${2*pi/7}" prefix="${prefix}_wheel${suffix}" suffix="3"/>
+    <xacro:insert_roller parent="${prefix}_wheel${suffix}_link" theta="${3*pi/7}" prefix="${prefix}_wheel${suffix}" suffix="4"/>
+    <xacro:insert_roller parent="${prefix}_wheel${suffix}_link" theta="${4*pi/7}" prefix="${prefix}_wheel${suffix}" suffix="5"/>
+    <xacro:insert_roller parent="${prefix}_wheel${suffix}_link" theta="${5*pi/7}" prefix="${prefix}_wheel${suffix}" suffix="6"/>
+    <xacro:insert_roller parent="${prefix}_wheel${suffix}_link" theta="${6*pi/7}" prefix="${prefix}_wheel${suffix}" suffix="7"/>
+    <xacro:insert_roller parent="${prefix}_wheel${suffix}_link" theta="${pi}" prefix="${prefix}_wheel${suffix}" suffix="8"/>
+    <xacro:insert_roller parent="${prefix}_wheel${suffix}_link" theta="${8*pi/7}" prefix="${prefix}_wheel${suffix}" suffix="9"/>
+    <xacro:insert_roller parent="${prefix}_wheel${suffix}_link" theta="${9*pi/7}" prefix="${prefix}_wheel${suffix}" suffix="10"/>
+    <xacro:insert_roller parent="${prefix}_wheel${suffix}_link" theta="${10*pi/7}" prefix="${prefix}_wheel${suffix}" suffix="11"/>
+    <xacro:insert_roller parent="${prefix}_wheel${suffix}_link" theta="${11*pi/7}" prefix="${prefix}_wheel${suffix}" suffix="12"/>
+    <xacro:insert_roller parent="${prefix}_wheel${suffix}_link" theta="${12*pi/7}" prefix="${prefix}_wheel${suffix}" suffix="13"/>
+    <xacro:insert_roller parent="${prefix}_wheel${suffix}_link" theta="${13*pi/7}" prefix="${prefix}_wheel${suffix}" suffix="14"/>
+  </xacro:macro>
+
+  <!-- Wheel Spawn Macro -->
+  <xacro:macro name="wheel" params="pos parent *origin">
+    <joint name="${pos}_wheel_joint" type="continuous">
+      <xacro:insert_block name="origin"/>
+      <parent link="${parent}"/>
+      <child link="${pos}_wheel_link"/>
+      <axis xyz="0 0 1"/>
+    </joint>
+    <link name="${pos}_wheel_link">
+      <collision>
+        <geometry>
+          <cylinder radius="0.073" length="0.03"/>  <!-- Experimental values -->
+        </geometry>
+      </collision>
+    </link>
+    <xacro:insert_wheel parent="${pos}_wheel_link" reflect="-1" prefix="${pos}" suffix="1" />
+    <xacro:insert_wheel parent="${pos}_wheel_link" reflect="1" prefix="${pos}" suffix="2" />
+  </xacro:macro>
+  
+</robot>
