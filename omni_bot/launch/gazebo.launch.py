@@ -9,48 +9,73 @@ from launch.actions import IncludeLaunchDescription, RegisterEventHandler
 
 from launch.event_handlers import OnProcessExit
 
+
 def generate_launch_description():
-  path = get_package_share_directory('omni_bot')
+    path = get_package_share_directory('omni_bot')
 
-  # Other Launch Files
-  urdf_args = {
-    'use_sim_time': 'true',
-    'use_rviz': 'false',
-    'use_joint_state_publisher_gui': 'false'
-  }
-  urdf_launch = IncludeLaunchDescription(
-    PythonLaunchDescriptionSource(os.path.join(path, 'launch', 'urdf.launch.py')),
-    launch_arguments=urdf_args.items()
-  )
+    # Other Launch Files
+    urdf_args = {
+        'use_sim_time': 'true',
+        'use_rviz': 'false',
+        'use_joint_state_publisher_gui': 'false'
+    }
+    urdf_launch = IncludeLaunchDescription(
+        PythonLaunchDescriptionSource(
+            os.path.join(path, 'launch', 'urdf.launch.py')),
+        launch_arguments=urdf_args.items()
+    )
 
-  world_path = os.path.join(
-    get_package_share_directory('gazebo_ros'),
-    'launch',
-    'gazebo.launch.py'
-  )
-  gazebo_world = IncludeLaunchDescription(
-    PythonLaunchDescriptionSource(world_path)
-  )
+    world_path = os.path.join(
+        get_package_share_directory('gazebo_ros'),
+        'launch',
+        'gazebo.launch.py'
+    )
+    gazebo_world = IncludeLaunchDescription(
+        PythonLaunchDescriptionSource(world_path)
+    )
 
-  # Nodes
-  bot_args = [
-    '-topic', 'robot_description',
-    '-entity', 'omni_bot'
-  ]
-  bot_spawn_node = Node(
-    package='gazebo_ros',
-    executable='spawn_entity.py',
-    arguments=bot_args,
-    output='screen'
-  )
+    # Nodes
+    bot_args = [
+        '-topic', 'robot_description',
+        '-entity', 'omni_bot'
+    ]
+    bot_spawn_node = Node(
+        package='gazebo_ros',
+        executable='spawn_entity.py',
+        arguments=bot_args,
+        output='screen'
+    )
 
-  # 
-  
-  return LaunchDescription([
-    urdf_launch,
-    gazebo_world,
-    bot_spawn_node,
+    # Joint State Broadcaster
+    jsb_node = Node(
+        package='controller_manager',
+        executable='spawner',
+        arguments=['joint_state_broadcaster']
+    )
+    jsb_launch = RegisterEventHandler(
+        event_handler=OnProcessExit(
+            target_action=bot_spawn_node,
+            on_exit=[jsb_node]
+        )
+    )
+    
+    # Omnidirectional Controller
+    omni_controller_node = Node(
+        package='controller_manager',
+        executable='spawner',
+        arguments=['omnidirectional_controller']
+    )
+    omni_controller_launch = RegisterEventHandler(
+        event_handler=OnProcessExit(
+            target_action=jsb_node,
+            on_exit=[omni_controller_node]
+        )
+    )
 
-  ])
-
-
+    return LaunchDescription([
+        urdf_launch,
+        gazebo_world,
+        bot_spawn_node,
+        jsb_launch,
+        omni_controller_launch
+    ])

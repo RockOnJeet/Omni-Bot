@@ -4,9 +4,8 @@
   <xacro:include filename="bot.xacro"/>
 
   <!-- Gazebo Parameters -->
-  <!-- <xacro:include filename="gazebo_params_ros2.xacro"/> -->
-  <!-- <xacro:include filename="gazebo_params_diffdrive.xacro"/> -->
+  <xacro:include filename="gazebo_params_ros2.xacro"/>
 
   <!-- ROS2 Control -->
-  <!-- <xacro:include filename="ros2_control.xacro"/> -->
+  <xacro:include filename="ros2_control.xacro"/>
 </robot>

@@ -16,9 +16,9 @@ omnidirectional_controller:
       - left_wheel_joint
       - right_wheel_joint
 
-    robot_radius: 0.6062 # distance from robot's center to wheel's center
-    wheel_radius: 0.076
-    gamma: 120.0 # angle between the wheel and the robot center
+    robot_radius: 0.4163 # distance from robot's center to wheel's center
+    wheel_radius: 0.068 # radius of the wheel
+    gamma: 0.0
 
     publish_rate: 50.0
     odom_frame_id: odom
@@ -30,5 +30,5 @@ omnidirectional_controller:
     open_loop: true  # If true, the controller will not use the odometry to estimate the robot's pose
     enable_odom_tf: true
 
-    cmd_vel_timeout: 0.35  # If we don't receive a cmd_vel message for this time, we stop the robot
+    cmd_vel_timeout: 0.5  # If we don't receive a cmd_vel message for this time, we stop the robot
     use_stamped_vel: false  # If true, the controller will use the stamped velocity instead of the twist
