@@ -16,38 +16,51 @@ class OmniControllerNode(Node):
     def __init__(self):
         super().__init__('omni_controller_node')
 
-        self.declare_parameter('wheel_names', ['wheel1', 'wheel2', 'wheel3'])
-        self.declare_parameter('wheel_radius', 0.03)
-        self.declare_parameter('robot_radius', 0.2)
-        self.declare_parameter('ticks_per_rev', 400)
-        self.declare_parameter('port', '/dev/ttyUSB0')
-        self.declare_parameter('baudrate', 115200)
-        self.declare_parameter('frame_rate', 30)
+        # Declare parameters
+        self.declare_parameter('wheel_names', ['front_wheel_joint', 'left_wheel_joint', 'right_wheel_joint'])   # Names of the wheels
+        self.declare_parameter('wheel_radius', 0.07)                                 # Radius of the wheels (m)
+        self.declare_parameter('robot_radius', 0.45)                                   # Radius of the robot (m)
+        self.declare_parameter('encoder_names', ['X_encoder_joint', 'Y_encoder_joint']) # Names of the encoders
+        self.declare_parameter('encoder_radius', 0.05)                               # Radius of Encoder Wheel (m)
+        self.declare_parameter('ticks_per_rev', 400)                                  # Encoder resolution
+        self.declare_parameter('port', '/dev/ttyACM0')                                # Serial port
+        self.declare_parameter('baudrate', 115200)                                    # Baudrate
+        self.declare_parameter('refresh_rate', 30)                                     # Refresh rate of the controller
 
         # Get parameters
         self.wheel_names = self.get_parameter(
-            'wheel_names').get_parameter_value().string_array
+            'wheel_names').get_parameter_value().string_array_value
         self.wheel_radius = self.get_parameter(
             'wheel_radius').get_parameter_value().double_value
         self.robot_radius = self.get_parameter(
             'robot_radius').get_parameter_value().double_value
+        self.encoder_names = self.get_parameter(
+            'encoder_names').get_parameter_value().string_array_value
+        self.encoder_radius = self.get_parameter(
+            'encoder_radius').get_parameter_value().double_value
         self.ticks_per_rev = self.get_parameter(
             'ticks_per_rev').get_parameter_value().integer_value
         self.port = self.get_parameter(
             'port').get_parameter_value().string_value
         self.baudrate = self.get_parameter(
             'baudrate').get_parameter_value().integer_value
-        self.frame_rate = self.get_parameter(
-            'frame_rate').get_parameter_value().integer_value
+        self.refresh_rate = self.get_parameter(
+            'refresh_rate').get_parameter_value().integer_value
 
         self.timer = self.create_timer(
-            1.0/self.frame_rate, self.update_odometry)
+            1.0/self.refresh_rate, self.update_odometry)
 
         self.odom_pub = self.create_publisher(Odometry, 'odom', 10)
-        # self.joint_pub = self.create_publisher(JointState, 'joint_states', 10)
+        self.joint_pub = self.create_publisher(JointState, 'joint_states', 10)
         self.tf_broadcaster = TransformBroadcaster(self)
         self.vel_sub = self.create_subscription(
             Twist, 'cmd_vel', self.vel_callback, 10)
+        
+        # Initialize Variables
+        self.pose = [0.0]*3 # [x, y, theta]
+        self.wheel_pwm = [0]*3  # [pwm1, pwm2, pwm3]
+        self.enc_ang = [0.0]*2  # [angX, angY]
+        self.enc_ang_vel = [0.0]*2  # [ang_velX, ang_velY]
 
         # Initialize Odom Message
         self.odom_msg = Odometry()
@@ -61,34 +74,44 @@ class OmniControllerNode(Node):
 
         # Initialize Joint State
         self.joint_msg = JointState()
-        self.joint_msg.name = self.wheel_names
-        self.joint_msg.position = [0]*3
-        self.joint_msg.velocity = [0]*3
+        self.joint_msg.name = self.encoder_names
+        self.joint_msg.position = [0.0]*3
+        self.joint_msg.velocity = [0.0]*3
 
         # Initialize Serial Port
-        self.serial = serial.Serial(self.port, self.baudrate, timeout=1)
-        timer = time.monotonic()
-        while self.serial.read() != b'!':
-            if time.monotonic() - timer > 5:
-                self.get_logger().error(f'Failed to initialize serial port {self.port}')
-                self.destroy_node()
-                return
-            self.serial.write(b'?')
-        self.serial.write(b'!')
-        self.serial.flush()
+        try:
+            self.serial = serial.Serial(self.port, self.baudrate, timeout=1)
+            self.serial.flush() # Clear buffer
+            
+            # Wait for Arduino to initialize
+            timer = time.monotonic()
+            while self.serial.read() != b'!':
+                if time.monotonic() - timer > 5:
+                    self.get_logger().error(f'Failed to initialize serial port {self.port}')
+                    self.destroy_node()
+                    return
+                self.serial.write(b'?')
+            self.serial.write(b'!') # Acknowledge
+            self.serial.flush()
+            self.get_logger().info(f'Serial port {self.port} opened successfully')
 
-        self.serial_thread = threading.Thread(target=self.serial_read)
-        self.serial_thread.daemon = True
-        self.serial_thread.start()
+            self.serial_thread = threading.Thread(target=self.serial_read)
+            self.serial_thread.daemon = True
+            self.serial_thread.start()
+        except serial.SerialException as e:
+            self.get_logger().warn(f'Failed to open serial port {self.port}: {e}')
+            self.destroy_node()
 
     def serial_read(self):
         while rclpy.ok():
             try:
                 data = self.serial.readline().decode().strip()
                 if data.startswith('{') and data.endswith('}'):
-                    data = data[1:-1].split(',')
-                    if len(data) == 3:
-                        self.joint_msg.position = [int(x) for x in data]
+                    data = data[1:-1].split('|')
+                    if len(data) == 5:
+                        self.enc_ang = [float(data[0]), float(data[1])]
+                        self.enc_ang_vel = [float(data[2]), float(data[3])]
+                        self.pose[2] = float(data[4])
                     else:
                         self.get_logger().warn('Invalid format: %s', data)
                 else:
@@ -98,16 +121,58 @@ class OmniControllerNode(Node):
                 break
 
     def vel_callback(self, msg):
-        # TODO: Convert Twist to Wheel Velocities (Forward Kinematics)
-        pass
+        # Convert Twist to Wheel Velocities (Forward Kinematics)
+        self.wheel_pwm[0] = (self.robot_radius * msg.angular.z - msg.linear.y) / self.wheel_radius
+        self.wheel_pwm[1] = (self.robot_radius * msg.angular.z + 0.5 * msg.linear.y + math.sin(math.pi/3) * msg.linear.x) / self.wheel_radius
+        self.wheel_pwm[2] = (self.robot_radius * msg.angular.z + 0.5 * msg.linear.y - math.sin(math.pi/3) * msg.linear.x) / self.wheel_radius
+
+        # Send Wheel Velocities to Serial Port
+        # self.serial.write(f'[{self.wheel_pwm[0]},{self.wheel_pwm[1]},{self.wheel_pwm[2]}]'.encode())    # Prints: [pwm1,pwm2,pwm3]
+        # self.serial.flush()
+        self.get_logger().info(f'Wheel PWM: {self.wheel_pwm}')
 
     def update_odometry(self):
-        # TODO: Update Odom and TF Messages (Inverse Kinematics)
-        pass
+        # Update Odom using Wheel Velocities (Inverse Kinematics)
+        timestamp = self.get_clock().now().to_msg()
+        dt: float = 1 / self.refresh_rate
 
-    def publish_topics(self):
-        # TODO: Publish Odom, TF, and Joint States
-        pass
+        # Parse encoder values
+        self.pose[0] += self.enc_ang_vel[0] * self.encoder_radius * dt
+        self.pose[1] += self.enc_ang_vel[1] * self.encoder_radius * dt
+        self.pose[2] += 0.0 # TODO: IMU sets this
+        
+        # DEBUG
+        # self._logger.info(f'Pose: {self.pose}')
+
+        # Publish Odom, TF, and Joint States
+        self.publish_topics(timestamp)
+
+    def publish_topics(self, current_time):
+        # Publish Odom
+        self.odom_msg.header.stamp = current_time
+        self.odom_msg.pose.pose.position.x = self.pose[0]
+        self.odom_msg.pose.pose.position.y = self.pose[1]
+        self.odom_msg.pose.pose.orientation.x = 0.0
+        self.odom_msg.pose.pose.orientation.y = 0.0
+        self.odom_msg.pose.pose.orientation.z = 0.0
+        self.odom_msg.pose.pose.orientation.w = 1.0
+        self.odom_pub.publish(self.odom_msg)
+        
+        # Publish Joint States
+        self.joint_msg.header.stamp = current_time
+        self.joint_msg.position = self.enc_ang
+        self.joint_msg.velocity = self.enc_ang_vel
+        self.joint_pub.publish(self.joint_msg)
+        
+        # Publish TF
+        self.tf_msg.header.stamp = current_time
+        self.tf_msg.transform.translation.x = self.pose[0]
+        self.tf_msg.transform.translation.y = self.pose[1]
+        self.tf_msg.transform.rotation.x = 0.0
+        self.tf_msg.transform.rotation.y = 0.0
+        self.tf_msg.transform.rotation.z = 0.0
+        self.tf_msg.transform.rotation.w = 1.0
+        self.tf_broadcaster.sendTransform(self.tf_msg)
 
     def destroy_node(self):
         self.serial.close()

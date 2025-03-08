@@ -12,6 +12,8 @@
   <xacro:property name="corner_side_length" value="0.15" /> <!-- m -->
   <xacro:property name="rod_width" value="0.02" /> <!-- m -->
   <xacro:property name="chassis_offset" value="0.01" /> <!-- m -->
+  <xacro:property name="encoder_radius" value="0.05" /> <!-- m -->
+  <xacro:property name="encoder_scale" value="${100/152}" /> <!-- m -->
 
   <!-- Derived Vars -->
   <xacro:property name="base_height" value="${1.732 * base_side_length / 2}" /> <!-- m -->
@@ -67,5 +69,13 @@
   <xacro:wheel pos="right" parent="base_link">
     <origin xyz="${((2 * base_height / 3) - (1.732 * corner_side_length / 2) - (rod_width / 2) - shaft_length)* cos(pi/6)} -${((2 * base_height / 3) - (1.732 * corner_side_length / 2) - (rod_width / 2) - shaft_length) * sin(pi/6)} ${wheel_radius}" rpy="${pi/2} 0.0 -${pi/6 + pi/2}"/>
   </xacro:wheel>
+
+  <!-- Encoders -->
+  <xacro:encoder pos="X" parent="base_link" scale="${encoder_scale}">
+    <origin xyz="0.0 0.08 ${encoder_radius}" rpy="-${pi/2} 0.0 0.0"/>  <!-- 0.09 is experimental value -->
+  </xacro:encoder>
+  <xacro:encoder pos="Y" parent="base_link" scale="${encoder_scale}">
+    <origin xyz="-0.04 -0.04 ${encoder_radius}" rpy="0.0 -${pi/2} 0.0"/> <!-- 0.042 and 0.03 are experimental values -->
+  </xacro:encoder>
 
 </robot>
