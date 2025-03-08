@@ -4,8 +4,9 @@
 // Pins
 const byte EncoderX[2] = {2, 4}; // X encoder pins
 const byte EncoderY[2] = {3, 5}; // Y encoder pins
-// const byte MotorL[3] = {6, 7, 8}; // Left motor pins (PWMB, IN3, IN4)
-// const byte MotorR[3] = {9, 10, 11}; // Right motor pins (PWMA, IN1, IN2)
+const byte MotorF[2] = {9, 6}; // Front motor pins (PWM, DIR)
+const byte MotorL[2] = {10, 7}; // Left motor pins (PWM, DIR)
+const byte MotorR[2] = {11, 8}; // Right motor pins (PWM, DIR)
 
 // Variables
 volatile long encTicks[2];
@@ -35,10 +36,11 @@ void setup() {
   while (!Serial);
 
   // Set up motors
-  // for (byte i = 0; i < 3; i++) {
-  //   pinMode(MotorL[i], OUTPUT);
-  //   pinMode(MotorR[i], OUTPUT);
-  // }
+  for (byte i = 0; i < 2; i++) {
+    pinMode(MotorF[i], OUTPUT);
+    pinMode(MotorL[i], OUTPUT);
+    pinMode(MotorR[i], OUTPUT);
+  }
 
   // Set up encoders
   for (byte i = 0; i < 2; i++) {
@@ -61,40 +63,31 @@ void setup() {
 }
 
 void loop() {
-  // Check for serial input
-  // if (Serial.available() > 0) {
-  //   String input = Serial.readStringUntil('\n');
-  //   if (input.startsWith("CMD")) {
-  //     input.remove(0, 4); // Remove "CMD,"
-  //     int commaIndex = input.indexOf(',');
-  //     float leftSpeed = input.substring(0, commaIndex).toFloat();
-  //     float rightSpeed = input.substring(commaIndex + 1).toFloat();
+  // Parse PWM commands
+  if (Serial.available() > 0) {
+    String input = Serial.readStringUntil('\n');
+    if (input.startsWith("[") && input.endsWith("]")) {
+      input.remove(0, 1);
+      input.remove(input.length() - 1, 1);  // Remove '[' and ']'
+      
+      // Parse input for 3 values
+      int fwdPWM = input.substring(0, input.indexOf("|")).toInt();
+      int leftPWM = input.substring(input.indexOf("|") + 1, input.lastIndexOf("|")).toInt();
+      int rightPWM = input.substring(input.lastIndexOf("|") + 1).toInt();
 
-  //     // Map leftSpeed and rightSpeed to motor control values
-  //     int leftPWM = constrain(map(leftSpeed, -10, 10, -255, 255), -255, 255);
-  //     int rightPWM = constrain(map(rightSpeed, -10, 10, -255, 255), -255, 255);
+      // Set motor direction and speed
+      digitalWrite(MotorF[1], fwdPWM > 0 ? HIGH : LOW);
+      analogWrite(MotorF[0], abs(fwdPWM));
 
-  //     // Set motor direction and speed
-  //     if (leftPWM <= 0) {
-  //       digitalWrite(MotorL[1], HIGH);
-  //       digitalWrite(MotorL[2], LOW);
-  //     } else {
-  //       digitalWrite(MotorL[1], LOW);
-  //       digitalWrite(MotorL[2], HIGH);
-  //     }
-  //     analogWrite(MotorL[0], abs(leftPWM));
+      digitalWrite(MotorL[1], leftPWM > 0 ? HIGH : LOW);
+      analogWrite(MotorL[0], abs(leftPWM));
 
-  //     if (rightPWM <= 0) {
-  //       digitalWrite(MotorR[1], HIGH);
-  //       digitalWrite(MotorR[2], LOW);
-  //     } else {
-  //       digitalWrite(MotorR[1], LOW);
-  //       digitalWrite(MotorR[2], HIGH);
-  //     }
-  //     analogWrite(MotorR[0], abs(rightPWM));
-  //   }
-  // }
+      digitalWrite(MotorR[1], rightPWM > 0 ? HIGH : LOW);
+      analogWrite(MotorR[0], abs(rightPWM));
+    }
+  }
 
+  // Send encoder data
   Serial.write('{');
   // Calculate Angles
   for (byte i = 0; i < 2; i++) {
