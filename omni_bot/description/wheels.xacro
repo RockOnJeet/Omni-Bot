@@ -6,7 +6,7 @@
 
   <!-- Roller Spawn Macro -->
   <xacro:macro name="insert_roller" params="parent theta prefix suffix">
-    <joint name="${prefix}_roller_${suffix}_joint" type="continuous">
+    <joint name="${prefix}_roller_${suffix}_joint" type="fixed">
       <origin xyz="${distance_to_roller_center*cos(theta)} ${distance_to_roller_center*sin(theta)} 0.0" rpy="0.0 0.0 ${theta-pi/2}"/>
       <parent link="${parent}"/>
       <child link="${prefix}_roller_${suffix}_link"/>
@@ -99,7 +99,7 @@
 
   <!-- Wheel Spawn Macro -->
   <xacro:macro name="wheel" params="pos parent *origin">
-    <joint name="${pos}_wheel_joint" type="continuous">
+    <joint name="${pos}_wheel_joint" type="fixed">
       <xacro:insert_block name="origin"/>
       <parent link="${parent}"/>
       <child link="${pos}_wheel_link"/>

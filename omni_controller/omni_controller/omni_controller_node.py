@@ -139,11 +139,11 @@ class OmniControllerNode(Node):
     def vel_callback(self, msg):
         # Convert Twist to Wheel Velocities (Forward Kinematics)
         self.wheel_pwm[0] = (self.robot_radius *
-                             msg.angular.z - msg.linear.y) / self.wheel_radius
+                             msg.angular.z - msg.linear.y * 2.0) / self.wheel_radius
         self.wheel_pwm[1] = (self.robot_radius * msg.angular.z + 0.5 *
-                             msg.linear.y + math.sin(math.pi/3) * msg.linear.x) / self.wheel_radius
+                             msg.linear.y * 2.0 + math.sin(math.pi/3) * msg.linear.x * 2.0) / self.wheel_radius
         self.wheel_pwm[2] = (self.robot_radius * msg.angular.z + 0.5 *
-                             msg.linear.y - math.sin(math.pi/3) * msg.linear.x) / self.wheel_radius
+                             msg.linear.y * 2.0 - math.sin(math.pi/3) * msg.linear.x * 2.0) / self.wheel_radius
 
         # Map Recieved Velocities to PWM Range
         for i in range(3):
@@ -156,7 +156,7 @@ class OmniControllerNode(Node):
 
         # Send Wheel Velocities to Serial Port
         self.serial.write(
-            f'[{self.wheel_pwm[0]}|{self.wheel_pwm[1]}|{self.wheel_pwm[2]}]'.encode())
+            f'[{self.wheel_pwm[0]}|{self.wheel_pwm[1]}|{self.wheel_pwm[2]}]\n'.encode())
         self.serial.flush()
         self.get_logger().info(f'Wheel PWM: {self.wheel_pwm}')
 
