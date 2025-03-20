@@ -1,3 +1,9 @@
+'''
+TODO:
+    1. Setup a full sim env using ros2_control and joint_state_publisher in controller_manager.
+    2. Setup some form of option where you can toggle between ros2_control and custom gazebo plugin that only subscribes to topics.
+'''
+
 import os
 
 from ament_index_python.packages import get_package_share_directory
@@ -58,7 +64,7 @@ def generate_launch_description():
             on_exit=[jsb_node]
         )
     )
-    
+
     # Omnidirectional Controller
     omni_controller_node = Node(
         package='controller_manager',

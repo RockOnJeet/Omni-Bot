@@ -1,5 +1,16 @@
+// IMU
+#include <I2Cdev.h>
+#include <MPU6050_6Axis_MotionApps20.h>
+
+MPU6050 mpu;
+Quaternion q;
+VectorFloat gravity;
+float ypr[3];
+byte packet[64];
+
 // Constants
-#define REFRESH_RATE 30 // Hz
+#define REFRESH_RATE 65.0 // Hz
+#define TICKS_PER_REV 400
 
 // Pins
 const byte EncoderX[2] = {2, 4}; // X encoder pins
@@ -13,6 +24,7 @@ volatile long encTicks[2];
 double velocity[2];
 double angles[2], prevAngles[2];
 unsigned long prevMillis;
+String data;
 
 // Interrupt Service Routines
 void leftEncoderISR() {
@@ -34,6 +46,26 @@ void rightEncoderISR() {
 void setup() {
   Serial.begin(115200);
   while (!Serial);
+  Serial.setTimeout(3);
+
+  // Set up IMU
+  Wire.begin();
+  Wire.setClock(400000); // 400kHz I2C clock. Comment on this line if having compilation difficulties
+  mpu.initialize();
+  if (mpu.testConnection() == 0) {
+    Serial.println(F("MPU6050 connection failed"));
+    while(true) delay(1000);
+  }
+  uint8_t devStatus = mpu.dmpInitialize();
+  if (devStatus != 0) {
+    Serial.print(F("DMP initialization failed: "));
+    Serial.println(devStatus);
+    while(true) delay(1000);
+  }
+  mpu.CalibrateAccel(6);
+  mpu.CalibrateGyro(6);
+  Serial.println(F("Ready"));
+  mpu.setDMPEnabled(true);
 
   // Set up motors
   for (byte i = 0; i < 2; i++) {
@@ -52,6 +84,9 @@ void setup() {
   attachInterrupt(digitalPinToInterrupt(EncoderX[0]), leftEncoderISR, RISING);
   attachInterrupt(digitalPinToInterrupt(EncoderY[0]), rightEncoderISR, RISING);
 
+  // Reserve space for encoder data
+  data.reserve(25);
+
   // Initialize Sync
   while (Serial.read() != '?') {
     delay(10);
@@ -65,15 +100,15 @@ void setup() {
 void loop() {
   // Parse PWM commands
   if (Serial.available() > 0) {
-    String input = Serial.readStringUntil('\n');
-    if (input.startsWith("[") && input.endsWith("]")) {
-      input.remove(0, 1);
-      input.remove(input.length() - 1, 1);  // Remove '[' and ']'
+    data = Serial.readStringUntil('\n');
+    if (data.startsWith("[") && data.endsWith("]")) {
+      data.remove(0, 1);
+      data.remove(data.length() - 1, 1);  // Remove '[' and ']'
       
-      // Parse input for 3 values
-      int fwdPWM = input.substring(0, input.indexOf("|")).toInt();
-      int leftPWM = input.substring(input.indexOf("|") + 1, input.lastIndexOf("|")).toInt();
-      int rightPWM = input.substring(input.lastIndexOf("|") + 1).toInt();
+      // Parse data for 3 values
+      int fwdPWM = data.substring(0, data.indexOf("|")).toInt();
+      int leftPWM = data.substring(data.indexOf("|") + 1, data.lastIndexOf("|")).toInt();
+      int rightPWM = data.substring(data.lastIndexOf("|") + 1).toInt();
 
       // Set motor direction and speed
       digitalWrite(MotorF[1], fwdPWM > 0 ? HIGH : LOW);
@@ -83,7 +118,7 @@ void loop() {
       analogWrite(MotorL[0], abs(leftPWM));
 
       digitalWrite(MotorR[1], rightPWM > 0 ? HIGH : LOW);
-      analogWrite(MotorR[0], abs(rightPWM));
+      analogWrite(MotorR[0], abs(rightPWM * 0.935));
     }
   }
 
@@ -91,18 +126,26 @@ void loop() {
   Serial.write('{');
   // Calculate Angles
   for (byte i = 0; i < 2; i++) {
-    angles[i] = (encTicks[i] * 2.0 * PI) / 140.0;
+    angles[i] = (encTicks[i] * 2.0 * PI) / TICKS_PER_REV;
     Serial.print(angles[i]); Serial.print('|');
   }
 
   // Calucalte Velocites
   for (byte i = 0; i < 2; i++) {
-    velocity[i] = (angles[i] - prevAngles[i]) * 1000 / (int)(1000 / REFRESH_RATE);  // rad/s
+    velocity[i] = (angles[i] - prevAngles[i]) * REFRESH_RATE;  // rad/s
     prevAngles[i] = angles[i];
     Serial.print(velocity[i]);
-    if (i < 1) Serial.print('|');
+    Serial.print('|');
   }
-  Serial.println('}');
+
+  // Calulate Yaw
+  if (mpu.dmpGetCurrentFIFOPacket(packet)) {
+    mpu.dmpGetQuaternion(&q, packet);
+    mpu.dmpGetGravity(&gravity, &q);
+    mpu.dmpGetYawPitchRoll(ypr, &q, &gravity);
+    Serial.print(-ypr[0]);
+  }
+  Serial.print("}\n");
 
   delay(1000 / REFRESH_RATE); // Adjust as needed
   // delay(100); // Prevents serial buffer overflow

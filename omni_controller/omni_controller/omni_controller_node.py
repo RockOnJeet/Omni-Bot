@@ -121,28 +121,27 @@ class OmniControllerNode(Node):
                 data = self.serial.readline().decode().strip()
                 if data.startswith('{') and data.endswith('}'):
                     data = data[1:-1].split('|')
-                    if len(data) == 5:
+                    if len(data) == 5:  # 4 if yaw is not published
                         self.enc_ang = [float(data[0]), float(data[1])]
                         self.enc_ang_vel = [float(data[2]), float(data[3])]
                         self.pose[2] = float(data[4])
                     else:
-                        self.get_logger().warn('Invalid format: %s', data)
+                        self.get_logger().warn(f'Invalid format: {data}')
                 elif data == '!':
                     self.get_logger().error('Acknowledge received during Operation!')
-
                 else:
-                    self.get_logger().warn('Invalid data: %s', data)
+                    self.get_logger().warn(f'Invalid data: {data}')
             except serial.SerialException as e:
-                self.get_logger().error('Serial error: %s', e)
+                self.get_logger().error(f'Serial error: {e}')
                 break
 
     def vel_callback(self, msg):
         # Convert Twist to Wheel Velocities (Forward Kinematics)
-        self.wheel_pwm[0] = (self.robot_radius *
+        self.wheel_pwm[0] = (-self.robot_radius *
                              msg.angular.z - msg.linear.y) / self.wheel_radius
-        self.wheel_pwm[1] = (self.robot_radius * msg.angular.z + 0.5 *
+        self.wheel_pwm[1] = (-self.robot_radius * msg.angular.z + 0.5 *
                              msg.linear.y + math.sin(math.pi/3) * msg.linear.x) / self.wheel_radius
-        self.wheel_pwm[2] = (self.robot_radius * msg.angular.z + 0.5 *
+        self.wheel_pwm[2] = (-self.robot_radius * msg.angular.z + 0.5 *
                              msg.linear.y - math.sin(math.pi/3) * msg.linear.x) / self.wheel_radius
 
         # Map Recieved Velocities to PWM Range
@@ -158,7 +157,7 @@ class OmniControllerNode(Node):
         self.serial.write(
             f'[{self.wheel_pwm[0]}|{self.wheel_pwm[1]}|{self.wheel_pwm[2]}]'.encode())
         self.serial.flush()
-        self.get_logger().info(f'Wheel PWM: {self.wheel_pwm}')
+        # self.get_logger().info(f'Wheel PWM: {self.wheel_pwm}')
 
     def update_odometry(self):
         # Update Odom using Wheel Velocities (Inverse Kinematics)
@@ -166,9 +165,9 @@ class OmniControllerNode(Node):
         dt: float = 1 / self.refresh_rate
 
         # Parse encoder values
-        self.pose[0] += self.enc_ang_vel[0] * self.encoder_radius * dt
-        self.pose[1] += self.enc_ang_vel[1] * self.encoder_radius * dt
-        self.pose[2] += 0.0  # TODO: IMU sets this
+        self.pose[0] += (self.enc_ang_vel[0] * math.cos(self.pose[2]) - self.enc_ang_vel[1] * math.sin(self.pose[2])) * self.encoder_radius * dt
+        self.pose[1] += (self.enc_ang_vel[1] * math.cos(self.pose[2]) + self.enc_ang_vel[0] * math.sin(self.pose[2])) * self.encoder_radius * dt
+        self.pose[2] += 0.0  # TODO: Gyro sets this
 
         # DEBUG
         # self._logger.info(f'Pose: {self.pose}')
@@ -183,8 +182,8 @@ class OmniControllerNode(Node):
         self.odom_msg.pose.pose.position.y = self.pose[1]
         self.odom_msg.pose.pose.orientation.x = 0.0
         self.odom_msg.pose.pose.orientation.y = 0.0
-        self.odom_msg.pose.pose.orientation.z = 0.0
-        self.odom_msg.pose.pose.orientation.w = 1.0
+        self.odom_msg.pose.pose.orientation.z = quat_from_euler(0.0, 0.0, self.pose[2])[2]
+        self.odom_msg.pose.pose.orientation.w = quat_from_euler(0.0, 0.0, self.pose[2])[3]
         self.odom_pub.publish(self.odom_msg)
 
         # Publish Joint States
@@ -199,8 +198,8 @@ class OmniControllerNode(Node):
         self.tf_msg.transform.translation.y = self.pose[1]
         self.tf_msg.transform.rotation.x = 0.0
         self.tf_msg.transform.rotation.y = 0.0
-        self.tf_msg.transform.rotation.z = 0.0
-        self.tf_msg.transform.rotation.w = 1.0
+        self.tf_msg.transform.rotation.z = quat_from_euler(0.0, 0.0, self.pose[2])[2]
+        self.tf_msg.transform.rotation.w = quat_from_euler(0.0, 0.0, self.pose[2])[3]
         self.tf_broadcaster.sendTransform(self.tf_msg)
 
     def destroy_node(self):
@@ -210,10 +209,6 @@ class OmniControllerNode(Node):
 
 # Main Function
 def main(args=None):
-    # Destroy previous nodes if any
-    if not rclpy.is_shutdown():
-        rclpy.shutdown()
-
     rclpy.init(args=args)
     node = OmniControllerNode()
     try:
