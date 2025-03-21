@@ -118,7 +118,7 @@ void loop() {
       analogWrite(MotorL[0], abs(leftPWM));
 
       digitalWrite(MotorR[1], rightPWM > 0 ? HIGH : LOW);
-      analogWrite(MotorR[0], abs(rightPWM * 0.935));
+      analogWrite(MotorR[0], abs(rightPWM));
     }
   }
 
