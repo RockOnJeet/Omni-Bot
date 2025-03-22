@@ -11,6 +11,7 @@ from launch.event_handlers import OnProcessExit
 
 
 def generate_launch_description():
+    urdf_path = get_package_share_directory('omni_bot_description')
     path = get_package_share_directory('omni_bot_sim')
 
     # Other Launch Files
@@ -21,7 +22,7 @@ def generate_launch_description():
     }
     urdf_launch = IncludeLaunchDescription(
         PythonLaunchDescriptionSource(
-            os.path.join(path, 'launch', 'urdf.launch.py')),
+            os.path.join(urdf_path, 'launch', 'urdf.launch.py')),
         launch_arguments=urdf_args.items()
     )
 

@@ -16,7 +16,7 @@
     <link name="${prefix}_roller_${suffix}_link">
       <visual>
         <geometry>
-            <mesh filename="file://$(find omni_bot_sim)/description/meshes/omni_wheel_roller.stl"/>
+            <mesh filename="file://$(find omni_bot_description)/description/meshes/omni_wheel_roller.stl"/>
         </geometry>
         <material name="black">
             <color rgba="0.0 0.0 0.0 1.0"/>
@@ -54,7 +54,7 @@
       <visual>
         <origin rpy="${pi/2} 0.0 ${2*pi/28}"/>
         <geometry>
-          <mesh filename="file://$(find omni_bot_sim)/description/meshes/omni_wheel_plate.stl"/>
+          <mesh filename="file://$(find omni_bot_description)/description/meshes/omni_wheel_plate.stl"/>
         </geometry>
         <material name="gray">
           <color rgba="0.5 0.5 0.5 1.0"/>
@@ -63,7 +63,7 @@
       <!-- <collision>
                 <origin rpy="${pi/2} 0.0 ${2*pi/28}"/>
                 <geometry>
-                    <mesh filename="file://$(find omni_bot_sim)/description/meshes/omni_wheel_plate.stl"/>
+                    <mesh filename="file://$(find omni_bot_description)/description/meshes/omni_wheel_plate.stl"/>
                 </geometry>
       </collision> -->
       <inertial>
@@ -128,7 +128,7 @@
       <visual>
         <origin rpy="${pi/2} 0.0 0.0"/>
         <geometry> 
-          <mesh filename="file://$(find omni_bot_sim)/description/meshes/omni_wheel_152mm.stl" scale="${scale} ${scale} ${scale}"/>
+          <mesh filename="file://$(find omni_bot_description)/description/meshes/omni_wheel_152mm.stl" scale="${scale} ${scale} ${scale}"/>
         </geometry>
         <material name="light_gray">
           <color rgba="0.75 0.75 0.75 1.0"/>

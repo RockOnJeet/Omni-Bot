@@ -6,7 +6,7 @@ from ament_index_python.packages import get_package_share_directory
 from launch_ros.actions import Node
 
 from launch.substitutions import LaunchConfiguration
-from launch.actions import DeclareLaunchArgument, IncludeLaunchDescription
+from launch.actions import DeclareLaunchArgument, IncludeLaunchDescription, TimerAction
 from launch import LaunchDescription
 from launch.launch_description_sources import PythonLaunchDescriptionSource
 
@@ -14,13 +14,14 @@ from launch.conditions import IfCondition
 
 
 def generate_launch_description():
-    path = get_package_share_directory('omni_bot_sim')
+    urdf_path = get_package_share_directory('omni_bot_description')
+    real_path = get_package_share_directory('omni_bot_real')
 
     # Arguments
     use_sim_time = LaunchConfiguration('use_sim_time')
     time_arg = DeclareLaunchArgument(
         name='use_sim_time',
-        default_value='true',
+        default_value='false',
         description='Use simulation/Gazebo clock'
     )
 
@@ -31,19 +32,12 @@ def generate_launch_description():
         description='Whether to start rviz'
     )
 
-    use_jsp = LaunchConfiguration('use_joint_state_publisher_gui')
-    jsp_arg = DeclareLaunchArgument(
-        name='use_joint_state_publisher_gui',
-        default_value='true',
-        description='Whether to start joint_state_publisher_gui'
-    )
-
     # Nodes
     rviz_config = os.path.join(
-        path,
+        real_path,
         'config',
         'rviz',
-        'urdf_view.rviz'
+        'map_view.rviz'
     )
 
     rviz_node = Node(
@@ -57,7 +51,7 @@ def generate_launch_description():
     )
 
     bot_xacro = os.path.join(
-        path,
+        urdf_path,
         'description',
         'omni_bot.urdf.xacro'
     )
@@ -71,23 +65,42 @@ def generate_launch_description():
                      'use_sim_time': use_sim_time}]
     )
 
-    jsp_gui_node = Node(
-        package='joint_state_publisher_gui',
-        executable='joint_state_publisher_gui',
-        name='joint_state_publisher',
-        output='screen',
-        condition=IfCondition(use_jsp)
+    # Run mapping node
+    mapper_params = {
+        'use_sim_time': use_sim_time
+    }
+    mapper_launch = IncludeLaunchDescription(
+      PythonLaunchDescriptionSource(
+        os.path.join(real_path, 'launch', 'localization_launch.py')
+      ),
+      launch_arguments=mapper_params.items()
     )
+    
+    # Teleop node
+    teleop_twist_keyboard_node = Node(
+        package='teleop_twist_keyboard',
+        executable='teleop_twist_keyboard',
+        name='teleop_twist_keyboard',
+        output='screen',
+        prefix='gnome-terminal --'
+    )
+    teleop_launch = TimerAction(
+        period=2.0,
+        actions=[teleop_twist_keyboard_node]
+    )
+    
 
     # Launch!
     return LaunchDescription([
         # Arguments
         time_arg,
         rviz_arg,
-        jsp_arg,
 
         # Nodes
         robot_state_publisher_node,
         rviz_node,
-        jsp_gui_node
+        
+        # Launch Files
+        mapper_launch,
+        teleop_launch
     ])

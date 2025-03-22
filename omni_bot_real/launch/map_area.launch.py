@@ -14,7 +14,7 @@ from launch.conditions import IfCondition
 
 
 def generate_launch_description():
-    sim_path = get_package_share_directory('omni_bot_sim')
+    urdf_path = get_package_share_directory('omni_bot_description')
     real_path = get_package_share_directory('omni_bot_real')
 
     # Arguments
@@ -51,7 +51,7 @@ def generate_launch_description():
     )
 
     bot_xacro = os.path.join(
-        sim_path,
+        urdf_path,
         'description',
         'omni_bot.urdf.xacro'
     )
