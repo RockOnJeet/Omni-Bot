@@ -38,7 +38,7 @@
     <visual>
       <origin xyz="0.0 -${base_height/3} ${base_clearance - chassis_offset}" rpy="0.0 0.0 ${pi/6}" />
       <geometry>
-        <mesh filename="file://$(find omni_bot)/description/meshes/chassis.stl" />
+        <mesh filename="file://$(find omni_bot_sim)/description/meshes/chassis.stl" />
       </geometry>
       <material name="light_gray">
         <color rgba="0.75 0.75 0.75 1.0" />
@@ -47,7 +47,7 @@
     <collision>
       <origin xyz="0.0 -${base_height/3} ${base_clearance}" rpy="0.0 0.0 ${pi/6}" />
       <geometry>
-        <mesh filename="file://$(find omni_bot)/description/meshes/bot_base.stl" />
+        <mesh filename="file://$(find omni_bot_sim)/description/meshes/bot_base.stl" />
       </geometry>
     </collision>
     <inertial>
@@ -103,7 +103,7 @@
     <visual>
       <origin xyz="0.0 0.0 0.0" rpy="0.0 0.0 0.0" />
       <geometry>
-        <mesh filename="file://$(find omni_bot)/description/meshes/Scanner.stl" />
+        <mesh filename="file://$(find omni_bot_sim)/description/meshes/Scanner.stl" />
       </geometry>
       <material name="dark_gray">
         <color rgba="0.25 0.25 0.25 1.0" />
@@ -112,7 +112,7 @@
     <collision>
       <origin xyz="0.0 0.0 0.0" rpy="0.0 0.0 0.0" />
       <geometry>
-        <mesh filename="file://$(find omni_bot)/description/meshes/Scanner.stl" />
+        <mesh filename="file://$(find omni_bot_sim)/description/meshes/Scanner.stl" />
       </geometry>
     </collision>
     <inertial>

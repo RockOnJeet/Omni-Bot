@@ -6,16 +6,16 @@ from ament_index_python.packages import get_package_share_directory
 from launch_ros.actions import Node
 
 from launch.substitutions import LaunchConfiguration
-from launch.actions import DeclareLaunchArgument, IncludeLaunchDescription, RegisterEventHandler
+from launch.actions import DeclareLaunchArgument, IncludeLaunchDescription, TimerAction
 from launch import LaunchDescription
 from launch.launch_description_sources import PythonLaunchDescriptionSource
-from launch.event_handlers import OnProcessExit
 
 from launch.conditions import IfCondition
 
 
 def generate_launch_description():
-    path = get_package_share_directory('omni_bot')
+    sim_path = get_package_share_directory('omni_bot_sim')
+    real_path = get_package_share_directory('omni_bot_real')
 
     # Arguments
     use_sim_time = LaunchConfiguration('use_sim_time')
@@ -34,7 +34,7 @@ def generate_launch_description():
 
     # Nodes
     rviz_config = os.path.join(
-        path,
+        real_path,
         'config',
         'rviz',
         'map_view.rviz'
@@ -51,7 +51,7 @@ def generate_launch_description():
     )
 
     bot_xacro = os.path.join(
-        path,
+        sim_path,
         'description',
         'omni_bot.urdf.xacro'
     )
@@ -71,9 +71,22 @@ def generate_launch_description():
     }
     mapper_launch = IncludeLaunchDescription(
       PythonLaunchDescriptionSource(
-        os.path.join(path, 'launch', 'online_async_launch.py')
+        os.path.join(real_path, 'launch', 'online_async_launch.py')
       ),
       launch_arguments=mapper_params.items()
+    )
+    
+    # Teleop node
+    teleop_twist_keyboard_node = Node(
+        package='teleop_twist_keyboard',
+        executable='teleop_twist_keyboard',
+        name='teleop_twist_keyboard',
+        output='screen',
+        prefix='gnome-terminal --'
+    )
+    teleop_launch = TimerAction(
+        period=2.0,
+        actions=[teleop_twist_keyboard_node]
     )
     
 
@@ -88,5 +101,6 @@ def generate_launch_description():
         rviz_node,
         
         # Launch Files
-        # mapper_launch
+        mapper_launch,
+        teleop_launch
     ])

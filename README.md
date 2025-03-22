@@ -23,8 +23,8 @@ An Extensive Research and Trial on Ground-Based Autonomous Holonomic Driven Robo
 - **Simulator**: Gazebo 11 (Classic).
 - **Visualisation Tool**: RViz2.
 ### 4.2. Packages
-- **Bot Description**: Custom [omni_bot](README.md) package.
-- **Control Stack**: Custom [omni_bot_control](README.md) package.
+- **Bot Description**: Custom [omni_bot_sim](README.md) package.
+- **Control Stack**: Custom [omnidirectional_controllers](README.md) package.
 - **Controller**: `teleop_twist_keyboard`.
 ## 5. How to Run the Project
 ### 5.1. Installation

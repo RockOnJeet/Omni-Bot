@@ -11,7 +11,7 @@ from launch.event_handlers import OnProcessExit
 
 
 def generate_launch_description():
-    path = get_package_share_directory('omni_bot')
+    path = get_package_share_directory('omni_bot_sim')
 
     # Other Launch Files
     urdf_args = {
@@ -76,6 +76,6 @@ def generate_launch_description():
         urdf_launch,
         gazebo_world,
         bot_spawn_node,
-        jsb_launch,
-        omni_controller_launch
+        # jsb_launch,
+        # omni_controller_launch
     ])

@@ -14,7 +14,7 @@ from launch.conditions import IfCondition
 
 
 def generate_launch_description():
-    path = get_package_share_directory('omni_bot')
+    path = get_package_share_directory('omni_bot_sim')
 
     # Arguments
     use_sim_time = LaunchConfiguration('use_sim_time')
@@ -79,13 +79,6 @@ def generate_launch_description():
         condition=IfCondition(use_jsp)
     )
 
-    # (Optional) Run mapping node
-    mapper_launch = IncludeLaunchDescription(
-        PythonLaunchDescriptionSource(
-            os.path.join(path, 'launch', 'online_async_launch.py')),
-        launch_arguments={'use_sim_time': use_sim_time}.items()
-    )
-
     # Launch!
     return LaunchDescription([
         # Arguments
@@ -96,8 +89,5 @@ def generate_launch_description():
         # Nodes
         robot_state_publisher_node,
         rviz_node,
-        jsp_gui_node,
-        
-        # Launch Files
-        # mapper_launch
+        jsp_gui_node
     ])
