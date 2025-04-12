@@ -35,7 +35,7 @@
   <!-- Base -->
   <link name="body_link">
     <visual>
-      <origin xyz="0.0 -${base_height/3} ${base_clearance - chassis_offset}" rpy="0.0 0.0 ${pi/6}" />
+      <origin xyz="0.0 0.0 ${base_clearance - chassis_offset}" rpy="0.0 0.0 0.0" />
       <geometry>
         <mesh filename="file://$(find omni_bot_description)/description/meshes/chassis.stl" />
         <!-- <mesh filename="meshes/chassis.stl" /> -->
@@ -45,7 +45,7 @@
       </material>
     </visual>
     <collision>
-      <origin xyz="0.0 -${base_height/3} ${base_clearance - chassis_offset}" rpy="0.0 0.0 ${pi/6}" />
+      <origin xyz="0.0 0.0 ${base_clearance - chassis_offset}" rpy="0.0 0.0 0.0" />
       <geometry>
         <mesh filename="file://$(find omni_bot_description)/description/meshes/chassis.stl" />
         <!-- <mesh filename="meshes/chassis.stl" /> -->
@@ -68,7 +68,7 @@
   </gazebo>
 
   <!-- Wheels -->
-  <xacro:wheel pos="front" parent="base_link">
+  <!-- <xacro:wheel pos="front" parent="base_link">
     <origin
       xyz="0.0 ${2 * base_height / 3 - (1.732 * corner_side_length / 2) - (rod_width / 2) - shaft_length} ${wheel_radius}"
       rpy="${pi/2} 0.0 0.0" />
@@ -82,7 +82,7 @@
     <origin
       xyz="${((2 * base_height / 3) - (1.732 * corner_side_length / 2) - (rod_width / 2) - shaft_length)* cos(pi/6)} -${((2 * base_height / 3) - (1.732 * corner_side_length / 2) - (rod_width / 2) - shaft_length) * sin(pi/6)} ${wheel_radius}"
       rpy="${pi/2} 0.0 -${pi/6 + pi/2}" />
-  </xacro:wheel>
+  </xacro:wheel> -->
 
   <!-- Encoders -->
   <xacro:encoder pos="X" parent="base_link" scale="${encoder_scale}">
@@ -121,12 +121,12 @@
   <joint name="lidar_joint" type="fixed">
     <parent link="base_footprint" />
     <child link="lidar_link" />
-    <origin xyz="0.0 0.0 0.15" rpy="0.0 0.0 ${pi}" />
+    <origin xyz="0.0 0.0 0.23" rpy="0.0 0.0 ${-pi/2}" />
   </joint>
   <link name="lidar_link">
     <visual>
       <geometry>
-        <mesh filename="file://$(find omni_bot_description)/description/meshes/Scanner.stl" />
+        <!-- <mesh filename="file://$(find omni_bot_description)/description/meshes/Scanner.stl" /> -->
         <!-- <mesh filename="meshes/Scanner.stl" /> -->
       </geometry>
       <material name="dark_gray">
@@ -135,7 +135,7 @@
     </visual>
     <collision>
       <geometry>
-        <mesh filename="file://$(find omni_bot_description)/description/meshes/Scanner.stl" />
+        <!-- <mesh filename="file://$(find omni_bot_description)/description/meshes/Scanner.stl" /> -->
         <!-- <mesh filename="meshes/Scanner.stl" /> -->
       </geometry>
     </collision>
