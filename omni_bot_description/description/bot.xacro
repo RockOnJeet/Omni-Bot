@@ -8,7 +8,7 @@
   <xacro:property name="base_side_length" value="1.05" /> <!-- m -->
   <xacro:property name="base_clearance" value="0.048" /> <!-- m -->
   <xacro:property name="wheel_radius" value="0.076" /> <!-- m -->
-  <xacro:property name="shaft_length" value="0.05" /> <!-- m -->
+  <xacro:property name="shaft_length" value="0.055" /> <!-- m -->
   <xacro:property name="corner_side_length" value="0.15" /> <!-- m -->
   <xacro:property name="rod_width" value="0.02" /> <!-- m -->
   <xacro:property name="chassis_offset" value="0.01" /> <!-- m -->
@@ -25,11 +25,10 @@
   </joint>
   <link name="base_link" />
 
-  <!-- Base Footprint -->
+  <!-- Base Footprint (Required by some controllers) -->
   <joint name="base_footprint_joint" type="fixed">
     <parent link="base_link" />
     <child link="base_footprint" />
-    <origin rpy="0.0 0.0 ${pi/2}"/>
   </joint>
   <link name="base_footprint" />
 
@@ -39,15 +38,17 @@
       <origin xyz="0.0 -${base_height/3} ${base_clearance - chassis_offset}" rpy="0.0 0.0 ${pi/6}" />
       <geometry>
         <mesh filename="file://$(find omni_bot_description)/description/meshes/chassis.stl" />
+        <!-- <mesh filename="meshes/chassis.stl" /> -->
       </geometry>
       <material name="light_gray">
         <color rgba="0.75 0.75 0.75 1.0" />
       </material>
     </visual>
     <collision>
-      <origin xyz="0.0 -${base_height/3} ${base_clearance}" rpy="0.0 0.0 ${pi/6}" />
+      <origin xyz="0.0 -${base_height/3} ${base_clearance - chassis_offset}" rpy="0.0 0.0 ${pi/6}" />
       <geometry>
-        <mesh filename="file://$(find omni_bot_description)/description/meshes/bot_base.stl" />
+        <mesh filename="file://$(find omni_bot_description)/description/meshes/chassis.stl" />
+        <!-- <mesh filename="meshes/chassis.stl" /> -->
       </geometry>
     </collision>
     <inertial>
@@ -93,6 +94,29 @@
     experimental values -->
   </xacro:encoder>
 
+  <!-- IMU -->
+  <joint name="imu_joint" type="fixed">
+    <parent link="base_footprint" />
+    <child link="imu_link" />
+    <origin xyz="0.0 0.0 ${base_clearance + 0.1}" rpy="0.0 0.0 0.0" />
+  </joint>
+  <link name="imu_link">
+    <visual>
+      <geometry>
+        <mesh filename="file://$(find omni_bot_description)/description/meshes/MPU_6050.stl" scale="0.001 0.001 0.001"/>
+        <!-- <mesh filename="meshes/MPU_6050.stl" scale="0.001 0.001 0.001"/> -->
+      </geometry>
+      <material name="dark_gray">
+        <color rgba="0.25 0.25 0.25 1.0" />
+      </material>
+    </visual>
+    <collision>
+      <geometry>
+        <box size="0.02 0.015 0.003"/>
+      </geometry>
+    </collision>
+  </link>
+
   <!-- Lidar -->
   <joint name="lidar_joint" type="fixed">
     <parent link="base_footprint" />
@@ -101,22 +125,21 @@
   </joint>
   <link name="lidar_link">
     <visual>
-      <origin xyz="0.0 0.0 0.0" rpy="0.0 0.0 0.0" />
       <geometry>
         <mesh filename="file://$(find omni_bot_description)/description/meshes/Scanner.stl" />
+        <!-- <mesh filename="meshes/Scanner.stl" /> -->
       </geometry>
       <material name="dark_gray">
         <color rgba="0.25 0.25 0.25 1.0" />
       </material>
     </visual>
     <collision>
-      <origin xyz="0.0 0.0 0.0" rpy="0.0 0.0 0.0" />
       <geometry>
         <mesh filename="file://$(find omni_bot_description)/description/meshes/Scanner.stl" />
+        <!-- <mesh filename="meshes/Scanner.stl" /> -->
       </geometry>
     </collision>
     <inertial>
-      <origin xyz="0.0 0.0 0.0" rpy="0.0 0.0 0.0" />
       <mass value="0.1" />
       <inertia ixx="0.0001" ixy="0.0" ixz="0.0" iyy="0.0001" iyz="0.0" izz="0.0001" />
     </inertial>
