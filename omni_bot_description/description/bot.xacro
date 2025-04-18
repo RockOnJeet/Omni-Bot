@@ -19,10 +19,6 @@
   <xacro:property name="base_height" value="${1.732 * base_side_length / 2}" /> <!-- m -->
 
   <!-- Base Link -->
-  <joint name="base_joint" type="fixed">
-    <parent link="base_link" />
-    <child link="body_link" />
-  </joint>
   <link name="base_link" />
 
   <!-- Base Footprint (Required by some controllers) -->
@@ -33,9 +29,14 @@
   <link name="base_footprint" />
 
   <!-- Base -->
+  <joint name="base_joint" type="fixed">
+    <parent link="base_link" />
+    <child link="body_link" />
+    <origin xyz="0.0 0.0 ${base_clearance - chassis_offset}" />
+  </joint>
   <link name="body_link">
     <visual>
-      <origin xyz="0.0 0.0 ${base_clearance - chassis_offset}" rpy="0.0 0.0 0.0" />
+      <origin rpy="0.0 0.0 ${-pi/2}"/>
       <geometry>
         <mesh filename="file://$(find omni_bot_description)/description/meshes/chassis.stl" />
         <!-- <mesh filename="meshes/chassis.stl" /> -->
@@ -45,15 +46,13 @@
       </material>
     </visual>
     <collision>
-      <origin xyz="0.0 0.0 ${base_clearance - chassis_offset}" rpy="0.0 0.0 0.0" />
+      <origin rpy="0.0 0.0 ${-pi/2}" />
       <geometry>
         <mesh filename="file://$(find omni_bot_description)/description/meshes/chassis.stl" />
         <!-- <mesh filename="meshes/chassis.stl" /> -->
       </geometry>
     </collision>
     <inertial>
-      <!-- <origin xyz="0.0 ${-base_height/3} ${base_clearance}" rpy="0.0 0.0 ${pi/6}"/> -->
-      <origin xyz="0.0 0.0 ${base_clearance}" rpy="0.0 0.0 0.0" />
       <mass value="${base_mass}" />
       <inertia ixx="0.1798003"
         ixy="0.0024346"
@@ -70,32 +69,37 @@
   <!-- Wheels -->
   <!-- <xacro:wheel pos="front" parent="base_link">
     <origin
-      xyz="0.0 ${2 * base_height / 3 - (1.732 * corner_side_length / 2) - (rod_width / 2) - shaft_length} ${wheel_radius}"
+      xyz="0.0 ${2 * base_height / 3 - (1.732 * corner_side_length / 2) - (rod_width / 2) - shaft_length}
+  ${wheel_radius}"
       rpy="${pi/2} 0.0 0.0" />
   </xacro:wheel>
   <xacro:wheel pos="left" parent="base_link">
     <origin
-      xyz="-${((2 * base_height / 3) - (1.732 * corner_side_length / 2) - (rod_width / 2) - shaft_length)* cos(pi/6)} -${((2 * base_height / 3) - (1.732 * corner_side_length / 2) - (rod_width / 2) - shaft_length) * sin(pi/6)} ${wheel_radius}"
+      xyz="-${((2 * base_height / 3) - (1.732 * corner_side_length / 2) - (rod_width / 2) -
+  shaft_length)* cos(pi/6)} -${((2 * base_height / 3) - (1.732 * corner_side_length / 2) -
+  (rod_width / 2) - shaft_length) * sin(pi/6)} ${wheel_radius}"
       rpy="${pi/2} 0.0 ${pi/6 + pi/2}" />
   </xacro:wheel>
   <xacro:wheel pos="right" parent="base_link">
     <origin
-      xyz="${((2 * base_height / 3) - (1.732 * corner_side_length / 2) - (rod_width / 2) - shaft_length)* cos(pi/6)} -${((2 * base_height / 3) - (1.732 * corner_side_length / 2) - (rod_width / 2) - shaft_length) * sin(pi/6)} ${wheel_radius}"
+      xyz="${((2 * base_height / 3) - (1.732 * corner_side_length / 2) - (rod_width / 2) - shaft_length)*
+  cos(pi/6)} -${((2 * base_height / 3) - (1.732 * corner_side_length / 2) - (rod_width / 2) -
+  shaft_length) * sin(pi/6)} ${wheel_radius}"
       rpy="${pi/2} 0.0 -${pi/6 + pi/2}" />
   </xacro:wheel> -->
 
   <!-- Encoders -->
-  <xacro:encoder pos="X" parent="base_link" scale="${encoder_scale}">
-    <origin xyz="0.0 0.08 ${encoder_radius}" rpy="-${pi/2} 0.0 0.0" />  <!-- 0.09 is experimental
+  <xacro:encoder pos="X" parent="base_footprint" scale="${encoder_scale}">
+    <origin xyz="0.08 0.0 ${encoder_radius}" rpy="${-pi/2} 0.0 ${-pi/2}" />  <!-- 0.09 is experimental
     value -->
   </xacro:encoder>
-  <xacro:encoder pos="Y" parent="base_link" scale="${encoder_scale}">
-    <origin xyz="-0.04 -0.04 ${encoder_radius}" rpy="0.0 -${pi/2} 0.0" /> <!-- 0.042 and 0.03 are
+  <xacro:encoder pos="Y" parent="base_footprint" scale="${encoder_scale}">
+    <origin xyz="-0.04 0.04 ${encoder_radius}" rpy="0.0 ${-pi/2} ${-pi/2}" /> <!-- 0.042 and 0.03 are
     experimental values -->
   </xacro:encoder>
 
   <!-- IMU -->
-  <joint name="imu_joint" type="fixed">
+  <!-- <joint name="imu_joint" type="fixed">
     <parent link="base_footprint" />
     <child link="imu_link" />
     <origin xyz="0.0 0.0 ${base_clearance + 0.1}" rpy="0.0 0.0 0.0" />
@@ -103,30 +107,32 @@
   <link name="imu_link">
     <visual>
       <geometry>
-        <mesh filename="file://$(find omni_bot_description)/description/meshes/MPU_6050.stl" scale="0.001 0.001 0.001"/>
+        <mesh filename="file://$(find omni_bot_description)/description/meshes/MPU_6050.stl"
+          scale="0.001 0.001 0.001" /> -->
         <!-- <mesh filename="meshes/MPU_6050.stl" scale="0.001 0.001 0.001"/> -->
-      </geometry>
+      <!-- </geometry>
       <material name="dark_gray">
         <color rgba="0.25 0.25 0.25 1.0" />
       </material>
     </visual>
     <collision>
       <geometry>
-        <box size="0.02 0.015 0.003"/>
+        <box size="0.02 0.015 0.003" />
       </geometry>
     </collision>
-  </link>
+  </link> -->
 
   <!-- Lidar -->
   <joint name="lidar_joint" type="fixed">
     <parent link="base_footprint" />
     <child link="lidar_link" />
-    <origin xyz="0.0 0.0 0.23" rpy="0.0 0.0 ${-pi/2}" />
+    <origin xyz="0.0 0.0 0.235" rpy="0.0 0.0 ${pi}" />
   </joint>
   <link name="lidar_link">
     <visual>
+      <origin xyz="0.0 0.0 -0.095"/>
       <geometry>
-        <!-- <mesh filename="file://$(find omni_bot_description)/description/meshes/Scanner.stl" /> -->
+        <mesh filename="file://$(find omni_bot_description)/description/meshes/Scanner.stl" />
         <!-- <mesh filename="meshes/Scanner.stl" /> -->
       </geometry>
       <material name="dark_gray">
@@ -135,7 +141,7 @@
     </visual>
     <collision>
       <geometry>
-        <!-- <mesh filename="file://$(find omni_bot_description)/description/meshes/Scanner.stl" /> -->
+        <mesh filename="file://$(find omni_bot_description)/description/meshes/Scanner.stl" />
         <!-- <mesh filename="meshes/Scanner.stl" /> -->
       </geometry>
     </collision>
