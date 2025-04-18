@@ -101,6 +101,8 @@ void loop() {
   // Parse PWM commands
   if (Serial.available() > 0) {
     data = Serial.readStringUntil('\n');
+    data.trim(); // Remove any leading/trailing whitespace
+    while (Serial.available() > 0) Serial.read(); // Clear the buffer
     if (data.startsWith("[") && data.endsWith("]")) {
       data.remove(0, 1);
       data.remove(data.length() - 1, 1);  // Remove '[' and ']'
@@ -127,7 +129,7 @@ void loop() {
   // Calculate Angles
   for (byte i = 0; i < 2; i++) {
     angles[i] = (encTicks[i] * 2.0 * PI) / TICKS_PER_REV;
-    Serial.print(angles[i]); Serial.print('|');
+    Serial.print(angles[i]); Serial.write('|');
   }
 
   // Calucalte Velocites
@@ -135,7 +137,7 @@ void loop() {
     velocity[i] = (angles[i] - prevAngles[i]) * REFRESH_RATE;  // rad/s
     prevAngles[i] = angles[i];
     Serial.print(velocity[i]);
-    Serial.print('|');
+    Serial.write('|');
   }
 
   // Calulate Yaw
@@ -145,7 +147,8 @@ void loop() {
     mpu.dmpGetYawPitchRoll(ypr, &q, &gravity);
     Serial.print(-ypr[0]);
   }
-  Serial.print("}\n");
+  Serial.print(F("}\n"));
+  Serial.flush(); // Ensure all data is sent before delay
 
   delay(1000 / REFRESH_RATE); // Adjust as needed
   // delay(100); // Prevents serial buffer overflow
