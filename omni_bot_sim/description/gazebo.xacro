@@ -1,0 +1,32 @@
+<robot xmlns:xacro="http://www.ros.org/wiki/xacro">
+  <gazebo>
+    <plugin name="gazebo_ros2_control" filename="libgazebo_ros2_control.so">
+      <ros>
+        <namespace>/sim</namespace>
+      </ros>
+      <parameters>$(find omni_bot_sim)/config/omnidirectional_controller.yaml</parameters>
+    </plugin>
+  </gazebo>
+  <ros2_control name="OmniHardware" type="system">
+    <hardware>
+      <plugin>gazebo_ros2_control/GazeboSystem</plugin>
+    </hardware>
+    <joint name="front_wheel_joint">
+      <command_interface name="velocity" />
+    </joint>
+    <joint name="left_wheel_joint">
+      <command_interface name="velocity" />
+    </joint>
+    <joint name="right_wheel_joint">
+      <command_interface name="velocity" />
+    </joint>
+    <joint name="X_encoder_joint">
+      <state_interface name="position" />
+      <state_interface name="velocity" />
+    </joint>
+    <joint name="Y_encoder_joint">
+      <state_interface name="position" />
+      <state_interface name="velocity" />
+    </joint>
+  </ros2_control>
+</robot>
