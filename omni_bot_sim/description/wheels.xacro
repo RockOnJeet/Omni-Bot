@@ -1,0 +1,199 @@
+<robot xmlns:xacro="http://www.ros.org/wiki/xacro">
+  <!-- Properties -->
+  <xacro:property name="distance_to_roller_center" value="0.0675" />
+  <xacro:property name="roller_radius" value="0.0095" />
+  <xacro:property name="roller_length" value="0.018" />
+  <xacro:property name="roller_mass" value="0.008" />
+  <xacro:property name="roller_count" value="14" />
+  <xacro:property name="half_wheel_mass" value="0.21" />
+  <xacro:property name="inter_wheel_gap" value="0.02" />
+
+  <!-- Wheel Macro -->
+  <xacro:macro name="wheel" params="pos parent *origin">
+    <joint name="${pos}_wheel_joint" type="continuous">
+      <xacro:insert_block name="origin" />
+      <parent link="${parent}" />
+      <child link="${pos}_wheel_link" />
+      <axis xyz="0.0 0.0 -1.0" />
+      <dynamics damping="0.001" friction="0.001" />
+    </joint>
+    <link name="${pos}_wheel_link">
+      <collision>
+        <geometry>
+          <cylinder radius="${distance_to_roller_center}" length="${inter_wheel_gap}"/>
+        </geometry>
+      </collision>
+    </link>
+    <!-- Add the two halves -->
+    <xacro:half_wheel parent="${pos}" order="1">
+      <origin xyz="0.0 0.0 ${inter_wheel_gap/2}" rpy="${pi/2} 0.0 0.0" />
+    </xacro:half_wheel>
+    <xacro:half_wheel parent="${pos}" order="2">
+      <origin xyz="0.0 0.0 -${inter_wheel_gap/2}" rpy="${pi/2} 0.0 ${2 * pi / 28}" />
+    </xacro:half_wheel>
+  </xacro:macro>
+
+  <!-- Half Wheel Macro -->
+  <xacro:macro name="half_wheel" params="parent order *origin">
+    <joint name="${parent}_half_wheel_joint_${order}" type="fixed">
+      <xacro:insert_block name="origin" />
+      <parent link="${parent}_wheel_link" />
+      <child link="${parent}_half_wheel_${order}" />
+    </joint>
+    <link name="${parent}_half_wheel_${order}">
+      <visual>
+        <geometry>
+          <!-- <cylinder radius="${distance_to_roller_center}" length="${inter_wheel_gap/2}" /> -->
+          <!-- <mesh filename="meshes/omni_wheel_plate.stl" /> -->
+          <mesh filename="file://$(find omni_bot_sim)/description/meshes/omni_wheel_plate.stl" />
+        </geometry>
+        <material name="gray">
+          <color rgba="0.5 0.5 0.5 1.0" />
+        </material>
+      </visual>
+      <inertial>
+        <mass value="${half_wheel_mass}"/>
+        <inertia ixx="2.746e-4"
+                  ixy="0.0"
+                  ixz="0.0"
+                  iyy="0.001"
+                  iyz="0.0"
+                  izz="2.746e-4"/>
+      </inertial>
+    </link>
+    <gazebo reference="${parent}_half_wheel_${order}">
+      <material>Gazebo/Gray</material>
+    </gazebo>
+    <!-- Add the rollers -->
+    <xacro:roller parent="${parent}" parent_order="${order}" order="0"  is_encoder="1"/>
+    <xacro:roller parent="${parent}" parent_order="${order}" order="1"  is_encoder="1"/>
+    <xacro:roller parent="${parent}" parent_order="${order}" order="2"  is_encoder="1"/>
+    <xacro:roller parent="${parent}" parent_order="${order}" order="3"  is_encoder="1"/>
+    <xacro:roller parent="${parent}" parent_order="${order}" order="4"  is_encoder="1"/>
+    <xacro:roller parent="${parent}" parent_order="${order}" order="5"  is_encoder="1"/>
+    <xacro:roller parent="${parent}" parent_order="${order}" order="6"  is_encoder="1"/>
+    <xacro:roller parent="${parent}" parent_order="${order}" order="7"  is_encoder="1"/>
+    <xacro:roller parent="${parent}" parent_order="${order}" order="8"  is_encoder="1"/>
+    <xacro:roller parent="${parent}" parent_order="${order}" order="9"  is_encoder="1"/>
+    <xacro:roller parent="${parent}" parent_order="${order}" order="10" is_encoder="1" />
+    <xacro:roller parent="${parent}" parent_order="${order}" order="11" is_encoder="1" />
+    <xacro:roller parent="${parent}" parent_order="${order}" order="12" is_encoder="1" />
+    <xacro:roller parent="${parent}" parent_order="${order}" order="13" is_encoder="1" />
+  </xacro:macro>
+
+  <!-- Roller Macro -->
+  <xacro:macro name="roller" params="parent parent_order order is_encoder">
+    <xacro:property name="roller_angle" value="${pi/7 * order + pi/14}" />
+    <joint name="${parent}_half_${parent_order}_roller_joint_${order}" type="continuous">
+      <parent link="${parent}_half_wheel_${parent_order}" />
+      <child link="${parent}_half_${parent_order}_roller_${order}" />
+      <origin
+        xyz="${distance_to_roller_center * is_encoder * cos(roller_angle)} 0.0 ${distance_to_roller_center * is_encoder * sin(roller_angle)}"
+        rpy="0.0 ${-roller_angle} 0.0" />
+      <axis xyz="0.0 0.0 1.0" />
+      <!-- <dynamics damping="0.02" friction="0.8" /> -->
+    </joint>
+    <link name="${parent}_half_${parent_order}_roller_${order}">
+      <visual>
+        <origin rpy="0.0 ${pi/2} 0.0" />
+        <geometry>
+          <!-- <cylinder radius="0.0095" length="0.018" /> -->
+          <!-- <mesh filename="meshes/omni_wheel_roller.stl" /> -->
+          <mesh filename="file://$(find omni_bot_sim)/description/meshes/omni_wheel_roller.stl" />
+        </geometry>
+        <material name="black">
+          <color rgba="0.1 0.1 0.1 1.0" />
+        </material>
+      </visual>
+      <collision>
+        <geometry>
+          <cylinder radius="${roller_radius * is_encoder}" length="${roller_length * is_encoder}" />
+        </geometry>
+      </collision>
+      <inertial>
+          <mass value="${roller_mass}"/>
+          <inertia ixx="3.111e-7"
+                    ixy="0.0"
+                    ixz="0.0"
+                    iyy="3.600e-7"
+                    iyz="0.0"
+                    izz="3.600e-7"/>
+      </inertial>
+    </link>
+    <gazebo reference="${parent}_half_${parent_order}_roller_${order}">
+      <material>Gazebo/Black</material>
+    </gazebo>
+  </xacro:macro>
+
+  <!-- Encoder Macro -->
+  <xacro:macro name="encoder" params="pos parent *origin scale">
+    <joint name="${pos}_encoder_joint" type="continuous">
+      <xacro:insert_block name="origin" />
+      <parent link="${parent}" />
+      <child link="${pos}_encoder_link" />
+      <axis xyz="0.0 0.0 1.0" />
+    </joint>
+    <link name="${pos}_encoder_link">
+      <visual>
+        <origin rpy="${pi/2} 0.0 0.0"/>
+        <geometry>
+          <mesh filename="file://$(find omni_bot_sim)/description/meshes/omni_wheel_152mm.stl" scale="${scale} ${scale} ${scale}"/>
+          <!-- <mesh filename="meshes/omni_wheel_152mm.stl" scale="${scale} ${scale} ${scale}"/> -->
+        </geometry>
+        <material name="light_gray">
+          <color rgba="0.75 0.75 0.75 1.0"/>
+        </material>
+      </visual>
+      <collision>
+        <geometry>
+          <cylinder radius="${distance_to_roller_center * 0.7}" length="${inter_wheel_gap}"/>
+          <!-- <sphere radius="${distance_to_roller_center * 0.75}"/> -->
+        </geometry>
+      </collision>
+      <inertial>
+        <mass value="${half_wheel_mass}"/>
+        <inertia ixx="2.746e-4"
+                  ixy="0.0"
+                  ixz="0.0"
+                  iyy="0.001"
+                  iyz="0.0"
+                  izz="2.746e-4"/>
+      </inertial>
+    </link>
+    <gazebo reference="${pos}_encoder_link">
+      <material>Gazebo/LightGray</material>
+    </gazebo>
+    <!-- False Link compatible for Rollers -->
+    <joint name="false_link_${pos}" type="fixed">
+      <parent link="${pos}_encoder_link" />
+      <child link="${parent}_half_wheel_${pos}" />
+      <origin rpy="${pi/2} 0.0 0.0"/>
+    </joint>
+    <link name="${parent}_half_wheel_${pos}"> 
+      <inertial>
+        <mass value="${half_wheel_mass}"/>
+        <inertia ixx="2.746e-4"
+                  ixy="0.0"
+                  ixz="0.0"
+                  iyy="0.001"
+                  iyz="0.0"
+                  izz="2.746e-4"/>
+      </inertial>
+    </link>
+    <!-- Add the rollers -->
+    <xacro:roller parent="${parent}" parent_order="${pos}" order="0"  is_encoder="0.625" />
+    <xacro:roller parent="${parent}" parent_order="${pos}" order="1"  is_encoder="0.625" />
+    <xacro:roller parent="${parent}" parent_order="${pos}" order="2"  is_encoder="0.625" />
+    <xacro:roller parent="${parent}" parent_order="${pos}" order="3"  is_encoder="0.625" />
+    <xacro:roller parent="${parent}" parent_order="${pos}" order="4"  is_encoder="0.625" />
+    <xacro:roller parent="${parent}" parent_order="${pos}" order="5"  is_encoder="0.625" />
+    <xacro:roller parent="${parent}" parent_order="${pos}" order="6"  is_encoder="0.625" />
+    <xacro:roller parent="${parent}" parent_order="${pos}" order="7"  is_encoder="0.625" />
+    <xacro:roller parent="${parent}" parent_order="${pos}" order="8"  is_encoder="0.625" />
+    <xacro:roller parent="${parent}" parent_order="${pos}" order="9"  is_encoder="0.625" />
+    <xacro:roller parent="${parent}" parent_order="${pos}" order="10" is_encoder="0.625"  />
+    <xacro:roller parent="${parent}" parent_order="${pos}" order="11" is_encoder="0.625"  />
+    <xacro:roller parent="${parent}" parent_order="${pos}" order="12" is_encoder="0.625"  />
+    <xacro:roller parent="${parent}" parent_order="${pos}" order="13" is_encoder="0.625"  />
+  </xacro:macro>
+</robot>

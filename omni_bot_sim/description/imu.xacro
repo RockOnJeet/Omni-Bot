@@ -1,0 +1,42 @@
+<robot xmlns:xacro="http://www.ros.org/wiki/xacro">
+  <!-- Variables -->
+  <xacro:property name="base_clearance" value="0.048" />
+  
+  <!-- IMU -->
+  <joint name="imu_joint" type="fixed">
+    <parent link="base_footprint" />
+    <child link="imu_link" />
+    <origin xyz="0.0 0.0 ${base_clearance + 0.1}" rpy="0.0 0.0 0.0" />
+  </joint>
+  <link name="imu_link">
+    <visual>
+      <geometry>
+        <mesh filename="file://$(find omni_bot_sim)/description/meshes/MPU_6050.stl"
+          scale="0.001 0.001 0.001" />
+  <!-- <mesh filename="meshes/MPU_6050.stl" scale="0.001 0.001 0.001"/> -->
+  </geometry>
+      <material name="dark_gray">
+        <color rgba="0.25 0.25 0.25 1.0" />
+      </material>
+    </visual>
+    <collision>
+      <geometry>
+        <box size="0.02 0.015 0.003" />
+      </geometry>
+    </collision>
+  </link>
+  <gazebo reference="imu_link">
+    <sensor name="imu_sensor" type="imu">
+      <update_rate>100.0</update_rate>
+      <always_on>true</always_on>
+      <visualize>true</visualize>
+      <plugin name="imu_plugin" filename="libgazebo_ros_imu_sensor.so">
+        <ros>
+          <remapping>imu_plugin/out:=imu</remapping>
+        </ros>
+        <frame_name>imu_link</frame_name>
+        <initial_orientation_as_reference>false</initial_orientation_as_reference>
+      </plugin>
+    </sensor>
+  </gazebo>
+</robot>
