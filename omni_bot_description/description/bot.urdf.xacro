@@ -24,7 +24,7 @@
     <visual>
       <origin xyz="-${base_side_length*sqrt(3)/6} 0.0 -${base_width/1.5}" rpy="0.0 0.0 ${-pi/3}" />
       <geometry>
-        <mesh filename="stl/chassis.stl" />
+        <mesh filename="package://omni_bot_description/description/stl/chassis.stl" />
       </geometry>
     </visual>
   </link>

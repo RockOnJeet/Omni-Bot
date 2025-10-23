@@ -43,7 +43,7 @@
       <visual>
         <origin xyz="0 0 0" rpy="${pi/2} 0 0" />
         <geometry>
-          <mesh filename="stl/omni_wheel_plate.stl" />
+          <mesh filename="package://omni_bot_description/description/stl/omni_wheel_plate.stl" />
         </geometry>
       </visual>
     </link>
@@ -82,7 +82,7 @@
       <visual>
         <origin xyz="0 0 0" rpy="0 ${pi/2} 0" />
         <geometry>
-          <mesh filename="stl/omni_wheel_roller.stl" />
+          <mesh filename="package://omni_bot_description/description/stl/omni_wheel_roller.stl" />
         </geometry>
       </visual>
     </link>
