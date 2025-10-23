@@ -1,0 +1,104 @@
+<?xml version="1.0"?>
+<robot xmlns:xacro="http://www.ros.org/wiki/xacro">
+  <!--      Parameters (in SI)       -->
+  <xacro:property name="plate_mass" value="0.21" />
+  <xacro:property name="plate_radius" value="0.0675" />
+  <xacro:property name="plate_gap" value="0.02" />
+  <xacro:property name="roller_radius" value="0.0095" />
+  <!-- <xacro:property name="roller_width" value="0.018" /> -->
+  <xacro:property name="wheel_radius" value="${plate_radius + roller_radius}" />
+
+  <xacro:macro name="wheel" params="i parent">
+    <!--     Get wheel position      -->
+    <xacro:property name="angle" value="${i * 2 * pi/3}" />
+    <xacro:property name="x" value="${(bot_radius + wheel_offset) * cos(angle)}" />
+    <xacro:property name="y" value="${(bot_radius + wheel_offset) * sin(angle)}" />
+
+    <joint name="wheel_joint_${i}" type="continuous">
+      <parent link="${parent}" />
+      <child link="wheel_${i}" />
+      <origin xyz="${x} ${y} 0" rpy="0 ${pi/2} ${angle}" />
+      <axis xyz="0 0 1" />
+      <!-- <limit lower="0.0" upper="0.0" effort="0.0" velocity="0.0"/> -->
+      <!-- <dynamics damping="0.1" friction="0.1" /> -->
+    </joint>
+
+    <link name="wheel_${i}">
+      <!-- A simple collision geometry -->
+    </link>
+
+    <xacro:plate i="-1" parent="wheel_${i}" />
+    <xacro:plate i="1" parent="wheel_${i}" />
+  </xacro:macro>
+
+  <xacro:macro name="plate" params="i parent">
+    <!--     Get plate position      -->
+    <joint name="${parent}_plate_joint_${i}" type="fixed">
+      <parent link="${parent}" />
+      <child link="${parent}_plate_${i}" />
+      <origin xyz="0 0 ${i * plate_gap/2}" rpy="0 0 ${i * pi/28}" />
+    </joint>
+
+    <link name="${parent}_plate_${i}">
+      <visual>
+        <origin xyz="0 0 0" rpy="${pi/2} 0 0" />
+        <geometry>
+          <mesh filename="stl/omni_wheel_plate.stl" />
+        </geometry>
+      </visual>
+    </link>
+
+    <!--   Add rollers to plate    -->
+    <xacro:roller i="0" parent="${parent}_plate_${i}" />
+    <xacro:roller i="1" parent="${parent}_plate_${i}" />
+    <xacro:roller i="2" parent="${parent}_plate_${i}" />
+    <xacro:roller i="3" parent="${parent}_plate_${i}" />
+    <xacro:roller i="4" parent="${parent}_plate_${i}" />
+    <xacro:roller i="5" parent="${parent}_plate_${i}" />
+    <xacro:roller i="6" parent="${parent}_plate_${i}" />
+    <xacro:roller i="7" parent="${parent}_plate_${i}" />
+    <xacro:roller i="8" parent="${parent}_plate_${i}" />
+    <xacro:roller i="9" parent="${parent}_plate_${i}" />
+    <xacro:roller i="10" parent="${parent}_plate_${i}" />
+    <xacro:roller i="11" parent="${parent}_plate_${i}" />
+    <xacro:roller i="12" parent="${parent}_plate_${i}" />
+    <xacro:roller i="13" parent="${parent}_plate_${i}" />
+  </xacro:macro>
+
+  <xacro:macro name="roller" params="i parent">
+    <!--     Get roller position      -->
+    <xacro:property name="angle" value="${i * pi/7 + pi/14}" />
+    <xacro:property name="x" value="${plate_radius * cos(angle)}" />
+    <xacro:property name="y" value="${plate_radius * sin(angle)}" />
+
+    <joint name="${parent}_roller_joint_${i}" type="continuous">
+      <parent link="${parent}" />
+      <child link="${parent}_roller_${i}" />
+      <origin xyz="${x} ${y} 0" rpy="${pi/2} 0 ${angle}" />
+      <axis xyz="0 0 1" />
+    </joint>
+
+    <link name="${parent}_roller_${i}">
+      <visual>
+        <origin xyz="0 0 0" rpy="0 ${pi/2} 0" />
+        <geometry>
+          <mesh filename="stl/omni_wheel_roller.stl" />
+        </geometry>
+      </visual>
+    </link>
+  </xacro:macro>
+
+  <!--             test              -->
+  <!-- <xacro:property name="bot_radius" value="0.1" />
+  <xacro:property name="wheel_offset" value="0.02" />
+  <link name="base_link">
+    <visual>
+      <geometry>
+        <cylinder radius="${bot_radius}" length="0.1" />
+      </geometry>
+    </visual>
+  </link>
+  <xacro:wheel i="0" parent="base_link" />
+  <xacro:wheel i="1" parent="base_link" />
+  <xacro:wheel i="2" parent="base_link" /> -->
+</robot>
