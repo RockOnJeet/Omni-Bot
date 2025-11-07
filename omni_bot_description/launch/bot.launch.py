@@ -64,12 +64,15 @@ def generate_launch_description():
     robot_state_publisher_node = Node(
         package='robot_state_publisher',
         executable='robot_state_publisher',
-        name='robot_state_publisher',
+        name=[robot_model, '_robot_state_publisher'],
         output='screen',
+        namespace=[robot_model],
         parameters=[{
             'robot_description': robot_description,
             'use_sim_time': use_sim_time
-        }]
+        }],
+        remappings=[('/tf', 'tf'),
+                    ('/tf_static', 'tf_static')]
     )
 
     return LaunchDescription([

@@ -162,8 +162,8 @@
         <geometry>
           <mesh filename="package://omni_bot_description/description/stl/omni_wheel_152mm.stl" scale="${encoder_scale} ${encoder_scale} ${encoder_scale}"/>
         </geometry>
-        <material name="black">
-          <color rgba="0.1 0.1 0.1 1.0" />
+        <material name="dark_gray">
+          <color rgba="0.25 0.25 0.25 1.0" />
         </material>
       </visual>
     </link>

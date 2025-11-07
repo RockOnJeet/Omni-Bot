@@ -3,7 +3,7 @@ from launch import LaunchDescription
 from launch.actions import DeclareLaunchArgument, IncludeLaunchDescription
 from launch.launch_description_sources import PythonLaunchDescriptionSource
 from launch_ros.actions import Node
-from launch.substitutions import LaunchConfiguration
+from launch.substitutions import LaunchConfiguration, PathJoinSubstitution
 from ament_index_python.packages import get_package_share_directory
 
 
@@ -39,8 +39,9 @@ def generate_launch_description():
     robot_model = LaunchConfiguration('robot_model')
 
     # Path to the custom RViz configuration file
-    rviz_config_file = os.path.join(
-        pkg_share, 'config', 'rviz', 'urdf_view.rviz')
+    rviz_config_file = PathJoinSubstitution([
+        pkg_share, 'config', 'rviz', [robot_model, '_view.rviz']
+    ])
 
     # Include the bot.launch.py file which handles robot_state_publisher
     # This reuses existing launch logic instead of duplicating code
@@ -59,6 +60,7 @@ def generate_launch_description():
         executable='joint_state_publisher_gui',
         name='joint_state_publisher_gui',
         output='screen',
+        namespace=[robot_model],
         parameters=[{
             'use_sim_time': use_sim_time
         }]
@@ -71,10 +73,13 @@ def generate_launch_description():
         executable='rviz2',
         name='rviz2',
         output='screen',
+        namespace=[robot_model],
         arguments=['-d', rviz_config_file],
         parameters=[{
             'use_sim_time': use_sim_time
-        }]
+        }],
+        remappings=[('/tf', 'tf'),
+                    ('/tf_static', 'tf_static')]
     )
 
     return LaunchDescription([

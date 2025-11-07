@@ -59,7 +59,7 @@ Visualization Manager:
         Durability Policy: Volatile
         History Policy: Keep Last
         Reliability Policy: Reliable
-        Value: /robot_description
+        Value: /gz/robot_description
       Enabled: true
       Links:
         All Links Enabled: true
@@ -76,6 +76,172 @@ Visualization Manager:
           Show Axes: false
           Show Trail: false
           Value: true
+        encoder_X:
+          Alpha: 1
+          Show Axes: false
+          Show Trail: false
+        encoder_X_plate_0:
+          Alpha: 1
+          Show Axes: false
+          Show Trail: false
+          Value: true
+        encoder_X_plate_0_roller_0:
+          Alpha: 1
+          Show Axes: false
+          Show Trail: false
+          Value: true
+        encoder_X_plate_0_roller_1:
+          Alpha: 1
+          Show Axes: false
+          Show Trail: false
+          Value: true
+        encoder_X_plate_0_roller_10:
+          Alpha: 1
+          Show Axes: false
+          Show Trail: false
+          Value: true
+        encoder_X_plate_0_roller_11:
+          Alpha: 1
+          Show Axes: false
+          Show Trail: false
+          Value: true
+        encoder_X_plate_0_roller_12:
+          Alpha: 1
+          Show Axes: false
+          Show Trail: false
+          Value: true
+        encoder_X_plate_0_roller_13:
+          Alpha: 1
+          Show Axes: false
+          Show Trail: false
+          Value: true
+        encoder_X_plate_0_roller_2:
+          Alpha: 1
+          Show Axes: false
+          Show Trail: false
+          Value: true
+        encoder_X_plate_0_roller_3:
+          Alpha: 1
+          Show Axes: false
+          Show Trail: false
+          Value: true
+        encoder_X_plate_0_roller_4:
+          Alpha: 1
+          Show Axes: false
+          Show Trail: false
+          Value: true
+        encoder_X_plate_0_roller_5:
+          Alpha: 1
+          Show Axes: false
+          Show Trail: false
+          Value: true
+        encoder_X_plate_0_roller_6:
+          Alpha: 1
+          Show Axes: false
+          Show Trail: false
+          Value: true
+        encoder_X_plate_0_roller_7:
+          Alpha: 1
+          Show Axes: false
+          Show Trail: false
+          Value: true
+        encoder_X_plate_0_roller_8:
+          Alpha: 1
+          Show Axes: false
+          Show Trail: false
+          Value: true
+        encoder_X_plate_0_roller_9:
+          Alpha: 1
+          Show Axes: false
+          Show Trail: false
+          Value: true
+        encoder_Y:
+          Alpha: 1
+          Show Axes: false
+          Show Trail: false
+        encoder_Y_plate_0:
+          Alpha: 1
+          Show Axes: false
+          Show Trail: false
+          Value: true
+        encoder_Y_plate_0_roller_0:
+          Alpha: 1
+          Show Axes: false
+          Show Trail: false
+          Value: true
+        encoder_Y_plate_0_roller_1:
+          Alpha: 1
+          Show Axes: false
+          Show Trail: false
+          Value: true
+        encoder_Y_plate_0_roller_10:
+          Alpha: 1
+          Show Axes: false
+          Show Trail: false
+          Value: true
+        encoder_Y_plate_0_roller_11:
+          Alpha: 1
+          Show Axes: false
+          Show Trail: false
+          Value: true
+        encoder_Y_plate_0_roller_12:
+          Alpha: 1
+          Show Axes: false
+          Show Trail: false
+          Value: true
+        encoder_Y_plate_0_roller_13:
+          Alpha: 1
+          Show Axes: false
+          Show Trail: false
+          Value: true
+        encoder_Y_plate_0_roller_2:
+          Alpha: 1
+          Show Axes: false
+          Show Trail: false
+          Value: true
+        encoder_Y_plate_0_roller_3:
+          Alpha: 1
+          Show Axes: false
+          Show Trail: false
+          Value: true
+        encoder_Y_plate_0_roller_4:
+          Alpha: 1
+          Show Axes: false
+          Show Trail: false
+          Value: true
+        encoder_Y_plate_0_roller_5:
+          Alpha: 1
+          Show Axes: false
+          Show Trail: false
+          Value: true
+        encoder_Y_plate_0_roller_6:
+          Alpha: 1
+          Show Axes: false
+          Show Trail: false
+          Value: true
+        encoder_Y_plate_0_roller_7:
+          Alpha: 1
+          Show Axes: false
+          Show Trail: false
+          Value: true
+        encoder_Y_plate_0_roller_8:
+          Alpha: 1
+          Show Axes: false
+          Show Trail: false
+          Value: true
+        encoder_Y_plate_0_roller_9:
+          Alpha: 1
+          Show Axes: false
+          Show Trail: false
+          Value: true
+        spring_link_X:
+          Alpha: 1
+          Show Axes: false
+          Show Trail: false
+        spring_link_Y:
+          Alpha: 1
+          Show Axes: false
+          Show Trail: false
         wheel_0:
           Alpha: 1
           Show Axes: false
@@ -557,6 +723,74 @@ Visualization Manager:
           Value: true
         base_link:
           Value: true
+        encoder_X:
+          Value: true
+        encoder_X_plate_0:
+          Value: true
+        encoder_X_plate_0_roller_0:
+          Value: true
+        encoder_X_plate_0_roller_1:
+          Value: true
+        encoder_X_plate_0_roller_10:
+          Value: true
+        encoder_X_plate_0_roller_11:
+          Value: true
+        encoder_X_plate_0_roller_12:
+          Value: true
+        encoder_X_plate_0_roller_13:
+          Value: true
+        encoder_X_plate_0_roller_2:
+          Value: true
+        encoder_X_plate_0_roller_3:
+          Value: true
+        encoder_X_plate_0_roller_4:
+          Value: true
+        encoder_X_plate_0_roller_5:
+          Value: true
+        encoder_X_plate_0_roller_6:
+          Value: true
+        encoder_X_plate_0_roller_7:
+          Value: true
+        encoder_X_plate_0_roller_8:
+          Value: true
+        encoder_X_plate_0_roller_9:
+          Value: true
+        encoder_Y:
+          Value: true
+        encoder_Y_plate_0:
+          Value: true
+        encoder_Y_plate_0_roller_0:
+          Value: true
+        encoder_Y_plate_0_roller_1:
+          Value: true
+        encoder_Y_plate_0_roller_10:
+          Value: true
+        encoder_Y_plate_0_roller_11:
+          Value: true
+        encoder_Y_plate_0_roller_12:
+          Value: true
+        encoder_Y_plate_0_roller_13:
+          Value: true
+        encoder_Y_plate_0_roller_2:
+          Value: true
+        encoder_Y_plate_0_roller_3:
+          Value: true
+        encoder_Y_plate_0_roller_4:
+          Value: true
+        encoder_Y_plate_0_roller_5:
+          Value: true
+        encoder_Y_plate_0_roller_6:
+          Value: true
+        encoder_Y_plate_0_roller_7:
+          Value: true
+        encoder_Y_plate_0_roller_8:
+          Value: true
+        encoder_Y_plate_0_roller_9:
+          Value: true
+        spring_link_X:
+          Value: true
+        spring_link_Y:
+          Value: true
         wheel_0:
           Value: true
         wheel_0_plate_-1:
@@ -928,6 +1162,68 @@ Visualization Manager:
                   {}
                 wheel_2_plate_1_roller_9:
                   {}
+          spring_link_X:
+            encoder_X:
+              encoder_X_plate_0:
+                encoder_X_plate_0_roller_0:
+                  {}
+                encoder_X_plate_0_roller_1:
+                  {}
+                encoder_X_plate_0_roller_10:
+                  {}
+                encoder_X_plate_0_roller_11:
+                  {}
+                encoder_X_plate_0_roller_12:
+                  {}
+                encoder_X_plate_0_roller_13:
+                  {}
+                encoder_X_plate_0_roller_2:
+                  {}
+                encoder_X_plate_0_roller_3:
+                  {}
+                encoder_X_plate_0_roller_4:
+                  {}
+                encoder_X_plate_0_roller_5:
+                  {}
+                encoder_X_plate_0_roller_6:
+                  {}
+                encoder_X_plate_0_roller_7:
+                  {}
+                encoder_X_plate_0_roller_8:
+                  {}
+                encoder_X_plate_0_roller_9:
+                  {}
+          spring_link_Y:
+            encoder_Y:
+              encoder_Y_plate_0:
+                encoder_Y_plate_0_roller_0:
+                  {}
+                encoder_Y_plate_0_roller_1:
+                  {}
+                encoder_Y_plate_0_roller_10:
+                  {}
+                encoder_Y_plate_0_roller_11:
+                  {}
+                encoder_Y_plate_0_roller_12:
+                  {}
+                encoder_Y_plate_0_roller_13:
+                  {}
+                encoder_Y_plate_0_roller_2:
+                  {}
+                encoder_Y_plate_0_roller_3:
+                  {}
+                encoder_Y_plate_0_roller_4:
+                  {}
+                encoder_Y_plate_0_roller_5:
+                  {}
+                encoder_Y_plate_0_roller_6:
+                  {}
+                encoder_Y_plate_0_roller_7:
+                  {}
+                encoder_Y_plate_0_roller_8:
+                  {}
+                encoder_Y_plate_0_roller_9:
+                  {}
       Update Interval: 0
       Value: true
   Enabled: true
@@ -1012,5 +1308,5 @@ Window Geometry:
   Views:
     collapsed: false
   Width: 1200
-  X: 28
-  Y: 28
+  X: -4
+  Y: -4
