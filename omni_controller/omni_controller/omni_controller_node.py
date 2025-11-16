@@ -165,8 +165,8 @@ class OmniControllerNode(Node):
         dt: float = 1 / self.refresh_rate
 
         # Parse encoder values
-        self.pose[0] += (self.enc_ang_vel[1] * math.cos(self.pose[2]) - self.enc_ang_vel[0] * math.sin(self.pose[2])) * self.encoder_radius * dt
-        self.pose[1] += (self.enc_ang_vel[0] * math.cos(self.pose[2]) + self.enc_ang_vel[1] * math.sin(self.pose[2])) * self.encoder_radius * dt
+        self.pose[0] += (self.enc_ang_vel[1] * math.cos(self.pose[2]) + self.enc_ang_vel[0] * math.sin(self.pose[2])) * self.encoder_radius * dt
+        self.pose[1] += (-self.enc_ang_vel[0] * math.cos(self.pose[2]) + self.enc_ang_vel[1] * math.sin(self.pose[2])) * self.encoder_radius * dt
         self.pose[2] += 0.0  # TODO: Gyro sets this
 
         # DEBUG

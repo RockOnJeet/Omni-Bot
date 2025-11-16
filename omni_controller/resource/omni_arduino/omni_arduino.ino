@@ -2,22 +2,25 @@
 #include <I2Cdev.h>
 #include <MPU6050_6Axis_MotionApps20.h>
 
+// Constants
+#define IMU_YPR_MODE  1     // Set 0 to enable Binary Output
+#define REFRESH_RATE  65.0  // Hz
+#define TICKS_PER_REV 400
+
 MPU6050 mpu;
+byte packet[64];
 Quaternion q;
 VectorFloat gravity;
 float ypr[3];
-byte packet[64];
-
-// Constants
-#define REFRESH_RATE 65.0 // Hz
-#define TICKS_PER_REV 400
+int16_t ax, ay, az;
+int16_t gx, gy, gz;
 
 // Pins
-const byte EncoderX[2] = {2, 4}; // X encoder pins
-const byte EncoderY[2] = {3, 5}; // Y encoder pins
-const byte MotorF[2] = {9, 6}; // Front motor pins (PWM, DIR)
-const byte MotorL[2] = {10, 7}; // Left motor pins (PWM, DIR)
-const byte MotorR[2] = {11, 8}; // Right motor pins (PWM, DIR)
+const byte EncoderX[2] = {2, 4};  // X encoder pins
+const byte EncoderY[2] = {3, 5};  // Y encoder pins
+const byte MotorF[2] = {9, 6};    // Front motor pins (PWM, DIR)
+const byte MotorL[2] = {10, 7};   // Left motor pins (PWM, DIR)
+const byte MotorR[2] = {11, 8};   // Right motor pins (PWM, DIR)
 
 // Variables
 volatile long encTicks[2];
@@ -50,22 +53,22 @@ void setup() {
 
   // Set up IMU
   Wire.begin();
-  Wire.setClock(400000); // 400kHz I2C clock. Comment on this line if having compilation difficulties
+  Wire.setClock(400000);  // 400kHz I2C clock. Comment on this line if having compilation difficulties
   mpu.initialize();
   if (mpu.testConnection() == 0) {
     Serial.println(F("MPU6050 connection failed"));
-    while(true) delay(1000);
+    while (true) delay(1000);
   }
   uint8_t devStatus = mpu.dmpInitialize();
   if (devStatus != 0) {
     Serial.print(F("DMP initialization failed: "));
     Serial.println(devStatus);
-    while(true) delay(1000);
+    while (true) delay(1000);
   }
   mpu.CalibrateAccel(6);
   mpu.CalibrateGyro(6);
   Serial.println(F("Ready"));
-  mpu.setDMPEnabled(true);
+  if (IMU_YPR_MODE) mpu.setDMPEnabled(true);
 
   // Set up motors
   for (byte i = 0; i < 2; i++) {
@@ -88,25 +91,21 @@ void setup() {
   data.reserve(25);
 
   // Initialize Sync
-  while (Serial.read() != '?') {
-    delay(10);
-  }
+  while (Serial.read() != '?') { delay(10); }
   Serial.write('!');
-  while (Serial.read() != '!') {
-    delay(10);
-  }
+  while (Serial.read() != '!') { delay(10); }
 }
 
 void loop() {
   // Parse PWM commands
   if (Serial.available() > 0) {
     data = Serial.readStringUntil('\n');
-    data.trim(); // Remove any leading/trailing whitespace
-    while (Serial.available() > 0) Serial.read(); // Clear the buffer
+    data.trim();                                   // Remove any leading/trailing whitespace
+    while (Serial.available() > 0) Serial.read();  // Clear the buffer
     if (data.startsWith("[") && data.endsWith("]")) {
       data.remove(0, 1);
       data.remove(data.length() - 1, 1);  // Remove '[' and ']'
-      
+
       // Parse data for 3 values
       int fwdPWM = data.substring(0, data.indexOf("|")).toInt();
       int leftPWM = data.substring(data.indexOf("|") + 1, data.lastIndexOf("|")).toInt();
@@ -129,7 +128,8 @@ void loop() {
   // Calculate Angles
   for (byte i = 0; i < 2; i++) {
     angles[i] = (encTicks[i] * 2.0 * PI) / TICKS_PER_REV;
-    Serial.print(angles[i]); Serial.write('|');
+    Serial.print(angles[i]);
+    Serial.write('|');
   }
 
   // Calucalte Velocites
@@ -142,14 +142,19 @@ void loop() {
 
   // Calulate Yaw
   if (mpu.dmpGetCurrentFIFOPacket(packet)) {
-    mpu.dmpGetQuaternion(&q, packet);
-    mpu.dmpGetGravity(&gravity, &q);
-    mpu.dmpGetYawPitchRoll(ypr, &q, &gravity);
-    Serial.print(-ypr[0]);
+    if (IMU_YPR_MODE) {
+      mpu.dmpGetQuaternion(&q, packet);
+      mpu.dmpGetGravity(&gravity, &q);
+      mpu.dmpGetYawPitchRoll(ypr, &q, &gravity);
+      Serial.print(-ypr[0]);
+    } else {
+      mpu.getMotion6(&ax, &ay, &az, &gx, &gy, &gz);
+      Serial.print(-atan2(ay, az));
+    }
   }
   Serial.print(F("}\n"));
-  Serial.flush(); // Ensure all data is sent before delay
+  Serial.flush();  // Ensure all data is sent before delay
 
-  delay(1000 / REFRESH_RATE); // Adjust as needed
+  delay(1000 / REFRESH_RATE);  // Adjust as needed
   // delay(100); // Prevents serial buffer overflow
 }
