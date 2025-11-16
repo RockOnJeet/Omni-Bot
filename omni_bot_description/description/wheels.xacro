@@ -4,8 +4,11 @@
   <xacro:property name="plate_mass" value="0.21" />
   <xacro:property name="plate_radius" value="0.0675" />
   <xacro:property name="plate_gap" value="0.02" />
+
+  <xacro:property name="roller_mass" value="0.008" />
   <xacro:property name="roller_radius" value="0.0095" />
-  <!-- <xacro:property name="roller_width" value="0.018" /> -->
+  <xacro:property name="roller_length" value="0.018" />
+
   <xacro:property name="wheel_radius" value="${plate_radius + roller_radius}" />
   <xacro:property name="encoder_radius" value="0.05" />
 
@@ -21,12 +24,26 @@
       <child link="wheel_${i}" />
       <origin xyz="${x} ${y} 0" rpy="0 ${pi/2} ${angle}" />
       <axis xyz="0 0 1" />
-      <!-- <limit lower="0.0" upper="0.0" effort="0.0" velocity="0.0"/> -->
-      <!-- <dynamics damping="0.1" friction="0.1" /> -->
+      <dynamics damping="25e-4" friction="1e-4"/>
     </joint>
 
     <link name="wheel_${i}">
       <!-- A simple collision geometry -->
+      <collision>
+        <geometry>
+          <cylinder radius="${plate_radius}" length="${plate_gap}" />
+        </geometry>
+      </collision>
+      <!-- Fake Inertial (Actual values in plate)-->
+      <inertial>
+        <mass value="1e-6" />
+        <inertia ixx="1e-9" 
+          ixy="0" 
+          ixz="0"
+          iyy="1e-9" 
+          iyz="0"
+          izz="1e-9"/>
+      </inertial>
     </link>
 
     <xacro:plate i="-1" parent="wheel_${i}" />
@@ -46,9 +63,13 @@
         <origin xyz="0 0 0" rpy="${pi/2} 0 0" />
         <geometry>
           <mesh filename="package://omni_bot_description/description/stl/omni_wheel_plate.stl" scale="${scale} ${scale} ${scale}" />
+          <!-- <cylinder radius="${plate_radius * scale}" length="${plate_gap/2}"/> -->
         </geometry>
         <material name="gray">
           <color rgba="0.5 0.5 0.5 1.0" />
+          <ambient>0.1 0.1 0.1 1</ambient>
+          <diffuse>0.2 0.2 0.2 1</diffuse>
+          <specular>0.1 0.1 0.1 1</specular>
         </material>
       </visual>
     </link>
@@ -81,6 +102,7 @@
       <child link="${parent}_roller_${i}" />
       <origin xyz="${x} ${y} 0" rpy="${pi/2} 0 ${angle}" />
       <axis xyz="0 0 1" />
+      <dynamics damping="1e-5" friction="1e-5"/>
     </joint>
 
     <link name="${parent}_roller_${i}">
@@ -91,29 +113,58 @@
         </geometry>
         <material name="black">
           <color rgba="0.1 0.1 0.1 1.0" />
+          <ambient>0.02 0.02 0.02 1</ambient>
+          <diffuse>0.05 0.05 0.05 1</diffuse>
+          <specular>0.01 0.01 0.01 1</specular>
         </material>
       </visual>
+      <collision>
+        <geometry>
+          <cylinder radius="${roller_radius * scale}" length="${roller_length * scale}" />
+        </geometry>
+      </collision>
+      <inertial>
+          <mass value="${roller_mass}"/>
+          <inertia ixx="3.111e-7"
+            ixy="0.0"
+            ixz="0.0"
+            iyy="3.600e-7"
+            iyz="0.0"
+            izz="3.600e-7"/>
+      </inertial>
     </link>
   </xacro:macro>
 
   <!--        Encoder Wheels        -->
-  <xacro:macro name="encoder" params="i parent *origin">
+  <xacro:macro name="encoder" params="i parent">
     <xacro:property name="encoder_scale" value="${100/152}" />
 
     <joint name="encoder_joint_${i}" type="continuous">
       <parent link="${parent}" />
       <child link="encoder_${i}" />
-      <xacro:insert_block name="origin" />
       <axis xyz="0 0 1" />
-      <!-- <limit lower="0.0" upper="0.0" effort="0.0" velocity="0.0"/> -->
-      <!-- <dynamics damping="0.1" friction="0.1" /> -->
     </joint>
 
     <link name="encoder_${i}">
       <!-- A simple collision geometry -->
+      <collision>
+        <geometry>
+          <cylinder radius="${plate_radius * encoder_scale}" length="${plate_gap * encoder_scale}" />
+        </geometry>
+      </collision>
+      <!-- Fake Inertial (Actual values in plate)-->
+      <inertial>
+        <mass value="1e-6" />
+        <inertia ixx="1e-9" 
+          ixy="0" 
+          ixz="0"
+          iyy="1e-9" 
+          iyz="0"
+          izz="1e-9"/>
+      </inertial>
     </link>
 
-    <xacro:plate i="0" parent="encoder_${i}" scale="${encoder_scale}"/>
+    <xacro:plate i="0" parent="encoder_${i}" scale="${encoder_scale}" />
   </xacro:macro>
 
   <!--        Preset Wheels          -->
@@ -132,7 +183,7 @@
 
     <link name="wheel_${i}">
       <visual>
-        <origin xyz="0.0 0.0 0.0" rpy="${pi/2} 0.0 0.0"/>
+        <origin xyz="0.0 0.0 0.0" rpy="${pi/2} 0.0 0.0" />
         <geometry>
           <mesh filename="package://omni_bot_description/description/stl/omni_wheel_152mm.stl" />
         </geometry>
@@ -140,6 +191,11 @@
           <color rgba="0.5 0.5 0.5 1.0" />
         </material>
       </visual>
+      <collision>
+        <geometry>
+          <cylinder radius="${wheel_radius}" length="${plate_gap + 2*roller_radius}" />
+        </geometry>
+      </collision>
     </link>
   </xacro:macro>
 
@@ -158,14 +214,19 @@
 
     <link name="encoder_${i}">
       <visual>
-        <origin xyz="0.0 0.0 0.0" rpy="${pi/2} 0.0 0.0"/>
+        <origin xyz="0.0 0.0 0.0" rpy="${pi/2} 0.0 0.0" />
         <geometry>
-          <mesh filename="package://omni_bot_description/description/stl/omni_wheel_152mm.stl" scale="${encoder_scale} ${encoder_scale} ${encoder_scale}"/>
+          <mesh filename="package://omni_bot_description/description/stl/omni_wheel_152mm.stl" scale="${encoder_scale} ${encoder_scale} ${encoder_scale}" />
         </geometry>
         <material name="dark_gray">
-          <color rgba="0.25 0.25 0.25 1.0" />
+          <color rgba="0.35 0.35 0.35 1.0" />
         </material>
       </visual>
+      <collision>
+        <geometry>
+          <cylinder radius="${wheel_radius * encoder_scale}" length="${(plate_gap + 2*roller_radius) * encoder_scale}" />
+        </geometry>
+      </collision>
     </link>
   </xacro:macro>
 

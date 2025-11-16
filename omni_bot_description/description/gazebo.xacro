@@ -1,0 +1,10 @@
+<robot xmlns:xacro="http://www.ros.org/wiki/xacro">
+  <gazebo>
+    <!-- Joint States -->
+    <plugin filename="gz-sim-joint-state-publisher-system" name="gz::sim::systems::JointStatePublisher">
+      <joint_name>encoder_joint_X</joint_name>
+      <joint_name>encoder_joint_Y</joint_name>
+      <topic>joint_states</topic>
+    </plugin>
+  </gazebo>
+</robot>

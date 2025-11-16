@@ -5,6 +5,7 @@ from launch.launch_description_sources import PythonLaunchDescriptionSource
 from launch_ros.actions import Node
 from launch.substitutions import LaunchConfiguration, PathJoinSubstitution
 from ament_index_python.packages import get_package_share_directory
+from launch.conditions import UnlessCondition
 
 
 def generate_launch_description():
@@ -22,13 +23,13 @@ def generate_launch_description():
     use_sim_time_arg = DeclareLaunchArgument(
         'use_sim_time',
         default_value='false',
-        description='Use simulation time if true (set to false for manual testing)'
+        description='Use simulation time if true (Default: false)'
     )
 
     robot_model_arg = DeclareLaunchArgument(
         'robot_model',
         default_value='gz',
-        description='Set the robot model (gz or rviz)'
+        description='Set the robot model (gz[Default] or rviz)'
     )
 
     # Get the package share directory
@@ -61,9 +62,7 @@ def generate_launch_description():
         name='joint_state_publisher_gui',
         output='screen',
         namespace=[robot_model],
-        parameters=[{
-            'use_sim_time': use_sim_time
-        }]
+        condition=UnlessCondition(LaunchConfiguration('use_sim_time'))
     )
 
     # RViz2 node with custom configuration
