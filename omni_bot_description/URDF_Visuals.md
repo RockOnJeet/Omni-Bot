@@ -32,30 +32,38 @@ source install/setup.bash
 
 ## Run
 
-For just the `robot_description` topic:
+### Robot Description Only
+
+Publish only the `/robot_description` topic (no visualization):
 
 ```bash
 ros2 launch omni_bot_description bot.launch.py
 ```
 
-To launch the URDF visualization with manual joint control:
+Optional parameters:
+- `robot_model:=rviz` (default) or `robot_model:=gz`
+- `use_sim_time:=false` (default) or `use_sim_time:=true`
+
+### Full Visualization with Joint Control
+
+Launch RViz2 with robot visualization and joint control GUI:
 
 ```bash
 ros2 launch omni_bot_description urdf.launch.py
 ```
 
-> Note: For different models (Gz & RViz), change parameters:
-> ```bash
-> robot_mode:=gz (/rviz)
-> ```
-> Default opens `gz`.
-
-## Optional: Change Sim Time
-
-Add additional parameter to the above:
+Optional parameters:
 ```bash
-use_sim_time:=true (/false)
+ros2 launch omni_bot_description urdf.launch.py robot_model:=rviz use_sim_time:=false
 ```
+
+**Parameters:**
+- `robot_model`: Choose URDF variant
+  - `rviz` (default): Optimized for visualization, includes visual meshes
+  - `gz`: Optimized for Gazebo physics simulation
+- `use_sim_time`: Time source
+  - `false` (default): Use system time
+  - `true`: Use `/clock` topic (required when running with Gazebo)
 
 ## Troubleshooting
 

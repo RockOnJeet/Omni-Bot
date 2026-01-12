@@ -30,7 +30,7 @@ def generate_launch_description():
     )
 
     # Get package share directory
-    pkg_share = get_package_share_directory('omni_bot_description')
+    desc_pkg = get_package_share_directory('omni_bot_description')
 
     # Get launch configuration
     use_sim_time = LaunchConfiguration('use_sim_time')
@@ -48,7 +48,7 @@ def generate_launch_description():
 
     # Path to xacro file
     xacro_file = PathJoinSubstitution([
-        pkg_share,
+        desc_pkg,
         'description',
         [robot_model, '_bot.urdf.xacro']
     ])
@@ -66,13 +66,10 @@ def generate_launch_description():
         executable='robot_state_publisher',
         name=[robot_model, '_robot_state_publisher'],
         output='screen',
-        namespace=[robot_model],
         parameters=[{
             'robot_description': robot_description,
             'use_sim_time': use_sim_time
-        }],
-        remappings=[('/tf', 'tf'),
-                    ('/tf_static', 'tf_static')]
+        }]
     )
 
     return LaunchDescription([

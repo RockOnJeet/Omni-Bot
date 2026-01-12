@@ -4,83 +4,52 @@
 ## adjust the `gz_topic_name` and `gz_type_name` fields accordingly.
 
 ## Clock (unidirectional from Gazebo -> ROS)
-- ros_topic_name: "/clock"
-  gz_topic_name: "/clock"
+- ros_topic_name: "clock"
+  gz_topic_name: "clock"
   ros_type_name: "rosgraph_msgs/msg/Clock"
   gz_type_name: "gz.msgs.Clock"
   direction: GZ_TO_ROS
   lazy: false
 
-## LIDAR (common mapping; adjust gz_topic_name if your sensor publishes elsewhere)
-# - ros_topic_name: "/scan"
-#   gz_topic_name: "/scan"
-#   ros_type_name: "sensor_msgs/msg/LaserScan"
-#   gz_type_name: "gz.msgs.LaserScan"
-#   subscriber_queue: 10
-#   publisher_queue: 20
-#   lazy: false
-#   direction: GZ_TO_ROS
-
-## IMU
-# - ros_topic_name: "/imu"
-#   gz_topic_name: "/imu"
-#   ros_type_name: "sensor_msgs/msg/Imu"
-#   gz_type_name: "gz.msgs.IMU"
-#   subscriber_queue: 10
-#   publisher_queue: 20
-#   lazy: false
-#   direction: GZ_TO_ROS
-
-## Odometry (Gazebo -> ROS typical)
-# - ros_topic_name: "/odom"
-#   gz_topic_name: "/odom"
-#   ros_type_name: "nav_msgs/msg/Odometry"
-#   gz_type_name: "gz.msgs.Odometry"
-#   subscriber_queue: 5
-#   publisher_queue: 5
-#   lazy: false
-#   direction: GZ_TO_ROS
-
 ## Joint states (model joint states from Gazebo)
-- ros_topic_name: "/rviz/joint_states"
-  gz_topic_name: "/joint_states"
+- ros_topic_name: "joint_states"
+  gz_topic_name: "joint_states"
   ros_type_name: "sensor_msgs/msg/JointState"
   gz_type_name: "gz.msgs.Model"
-  subscriber_queue: 20
-  publisher_queue: 20
-  lazy: false
   direction: GZ_TO_ROS
+  lazy: false
 
-## cmd_vel (commands from ROS -> Gazebo to drive robot)
-# - ros_topic_name: "/cmd_vel"
-#   gz_topic_name: "/cmd_vel"
-#   ros_type_name: "geometry_msgs/msg/Twist"
-#   gz_type_name: "gz.msgs.Twist"
-#   subscriber_queue: 5
-#   publisher_queue: 5
+## LIDAR (common mapping; adjust gz_topic_name if your sensor publishes elsewhere)
+# - ros_topic_name: "scan"
+#   gz_topic_name: "scan"
+#   ros_type_name: "sensor_msgs/msg/LaserScan"
+#   gz_type_name: "gz.msgs.LaserScan"
+#   direction: GZ_TO_ROS
 #   lazy: false
-#   direction: ROS_TO_GZ
 
-## Motor/wheel controllers (example for actuator commands)
-# If using actuator_msgs/msg/Actuators or custom messages, update accordingly
-# - ros_topic_name: "/motors/commands"
-#   gz_topic_name: "/motors/commands"
-#   ros_type_name: "actuator_msgs/msg/Actuators"
-#   gz_type_name: "gz.msgs.Actuators"
-#   subscriber_queue: 5
-#   publisher_queue: 5
-#   lazy: false
-#   direction: ROS_TO_GZ
+## IMU
+# - ros_topic_name: "imu"
+#   gz_topic_name: "imu"
+#   ros_type_name: "sensor_msgs/msg/Imu"
+#   gz_type_name: "gz.msgs.IMU"
+#   direction: GZ_TO_ROS
+#   lazy: false 
 
 ## Camera image example (if present)
-# - ros_topic_name: "/camera/image"
-#   gz_topic_name: "/camera/image"
+# - ros_topic_name: "camera/image"
+#   gz_topic_name: "camera/image"
 #   ros_type_name: "sensor_msgs/msg/Image"
 #   gz_type_name: "gz.msgs.Image"
-#   subscriber_queue: 5
-#   publisher_queue: 5
-#   lazy: false
 #   direction: GZ_TO_ROS
+#   lazy: true
+
+## cmd_vel (commands from both ROS and Gazebo to drive robot)
+- ros_topic_name: "cmd_vel"
+  gz_topic_name: "cmd_vel"
+  ros_type_name: "geometry_msgs/msg/Twist"
+  gz_type_name: "gz.msgs.Twist"
+  direction: BIDIRECTIONAL
+  lazy: true
 
 ## Battery (optional)
 # - ros_topic_name: "/battery_state"
@@ -93,7 +62,7 @@
 #   direction: GZ_TO_ROS
 
 ## Services: world control (unpause/pause) -- adjust world name if needed
-- service_name: "/world/default/control"
+- service_name: "/world/empty/control"
   ros_type_name: "ros_gz_interfaces/srv/ControlWorld"
   gz_req_type_name: "gz.msgs.WorldControl"
   gz_rep_type_name: "gz.msgs.Boolean"

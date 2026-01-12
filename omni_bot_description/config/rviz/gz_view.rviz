@@ -59,7 +59,7 @@ Visualization Manager:
         Durability Policy: Volatile
         History Policy: Keep Last
         Reliability Policy: Reliable
-        Value: /gz/robot_description
+        Value: /robot_description
       Enabled: true
       Links:
         All Links Enabled: true
@@ -80,6 +80,7 @@ Visualization Manager:
           Alpha: 1
           Show Axes: false
           Show Trail: false
+          Value: true
         encoder_X_plate_0:
           Alpha: 1
           Show Axes: false
@@ -159,6 +160,7 @@ Visualization Manager:
           Alpha: 1
           Show Axes: false
           Show Trail: false
+          Value: true
         encoder_Y_plate_0:
           Alpha: 1
           Show Axes: false
@@ -246,6 +248,7 @@ Visualization Manager:
           Alpha: 1
           Show Axes: false
           Show Trail: false
+          Value: true
         wheel_0_plate_-1:
           Alpha: 1
           Show Axes: false
@@ -400,6 +403,7 @@ Visualization Manager:
           Alpha: 1
           Show Axes: false
           Show Trail: false
+          Value: true
         wheel_1_plate_-1:
           Alpha: 1
           Show Axes: false
@@ -554,6 +558,7 @@ Visualization Manager:
           Alpha: 1
           Show Axes: false
           Show Trail: false
+          Value: true
         wheel_2_plate_-1:
           Alpha: 1
           Show Axes: false
@@ -1308,5 +1313,5 @@ Window Geometry:
   Views:
     collapsed: false
   Width: 1200
-  X: -4
-  Y: -4
+  X: 427
+  Y: 49

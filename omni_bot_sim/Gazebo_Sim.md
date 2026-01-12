@@ -35,50 +35,118 @@ To launch Gazebo with the robot spawned in the default empty world:
 ros2 launch omni_bot_sim gazebo.launch.py
 ```
 
-> **Note**: The launch always uses:
-> - **Namespace**: `gz`
-> - **Sim Time**: `true` (always enabled)
-> - **Robot Model**: `gz` variant (from `omni_bot_description`)
-> - **Entity Name**: `omni_bot`
-> - **Spawn Pose**: (x=0, y=0, z≈0, yaw=0) — simulator defaults
+> **Note**: The launch file configuration:
+> - **Sim Time**: `true` (always enabled for all nodes)
+> - **Robot Model**: Uses `gz_bot.urdf.xacro` variant for Gazebo physics
+> - **Entity Name**: `Omni_Bot`
+> - **Spawn Method**: Direct URDF string spawn (no topic dependency)
+> - **Default World**: `empty.sdf` (standard Gazebo empty world)
 
 ## Optional: Custom World
 
 To launch with a custom world file:
 
 ```bash
-ros2 launch omni_bot_sim gazebo.launch.py world:=/absolute/path/to/world.sdf
+ros2 launch omni_bot_sim gazebo.launch.py world:=/path/to/world.sdf
 ```
 
-Leave `world` empty (default) for the standard empty Gazebo world.
+Or relative to the package:
+```bash
+ros2 launch omni_bot_sim gazebo.launch.py world:=warehouse.sdf
+```
 
-## What happens when you launch
+## What Happens When You Launch
 
-1. **Gazebo (gz sim)** starts via `ros_gz_sim/launch/gz_sim.launch.py`
-2. **Robot State Publisher** launches from `omni_bot_description/launch/bot.launch.py` under `gz` namespace
-3. **Robot spawning** expands the Xacro (`gz_bot.urdf.xacro`) and spawns the entity using `ros_gz_sim create`
+1. **Gazebo (gz sim)** starts with:
+   - Auto-run enabled (`-r` flag)
+   - Verbosity level 3 (`-v3`)
+   - Custom or default world loaded
+   - Shutdown on exit configured
+
+2. **Robot Spawning**:
+   - Xacro file `gz_bot.urdf.xacro` processed to URDF
+   - Robot spawned using `ros_gz_sim create` with URDF string
+   - No dependency on `/robot_description` topic
+
+3. **ROS-Gazebo Bridge** (`ros_gz_bridge`):
+   - Bridges topics between Gazebo and ROS 2
+   - Configuration from `config/ros_gz_bridge.yaml`
+   - Currently bridges: `/clock`, `/joint_states`
+   - Runs as standalone node (no composition)
+
+4. **RViz2 Visualization**:
+   - Launches via `omni_bot_description/launch/urdf.launch.py`
+   - Uses `robot_model:=rviz` variant for display
+   - Sim time enabled for synchronization
 
 ## Troubleshooting
 
 **Gazebo doesn't start:**
-- Verify Gazebo tools are installed:
+- Verify Gazebo installation:
   ```bash
   gz sim --help
   ros2 pkg list | grep ros_gz
   ```
-
-**Robot doesn't appear in simulation:**
-- Check that `/gz/robot_state_publisher` is running.
-- Verify `/gz/robot_description` topic is being published:
+- Check if another Gazebo instance is running:
   ```bash
-  ros2 topic list | grep robot_description
-  ros2 topic echo /gz/robot_description --once
+  ps aux | grep gz
   ```
 
-**Xacro errors:**
-- Ensure `omni_bot_description` is built and sourced.
-- Check for malformed or missing files under `omni_bot_description/description/`.
+**Robot doesn't appear in simulation:**
+- Check Gazebo entity list:
+  ```bash
+  gz model --list
+  ```
+- Verify spawn command succeeded (check terminal output)
+- Try respawning:
+  ```bash
+  gz service -s /world/default/create --reqtype gz.msgs.EntityFactory --reptype gz.msgs.Boolean --timeout 300 --req 'sdf_filename: "/path/to/model.sdf"'
+  ```
+
+**Bridge topics not working:**
+- List active bridges:
+  ```bash
+  ros2 topic list | grep -E '(clock|joint_states)'
+  ```
+- Check bridge configuration:
+  ```bash
+  ros2 param list /ros_gz_bridge
+  ```
+- Verify Gazebo topics:
+  ```bash
+  gz topic -l
+  ```
+
+**RViz shows no robot:**
+- Ensure `robot_state_publisher` is running:
+  ```bash
+  ros2 node list | grep robot_state_publisher
+  ```
+- Check `/robot_description` topic:
+  ```bash
+  ros2 topic echo /robot_description --once
+  ```
+- Set Fixed Frame to `base_link` in RViz
+
+**Xacro processing errors:**
+- Test xacro independently:
+  ```bash
+  xacro $(ros2 pkg prefix omni_bot_description)/share/omni_bot_description/description/gz_bot.urdf.xacro
+  ```
+- Check for missing mesh files or malformed XML
 
 **Build errors:**
-- Make sure all dependencies are installed.
-- Source ROS 2: `source /opt/ros/jazzy/setup.bash`.
+- Install all dependencies:
+  ```bash
+  cd ~/ROSCodes/Omni-Bot
+  rosdep install --from-paths src --ignore-src -r -y
+  ```
+- Source ROS 2:
+  ```bash
+  source /opt/ros/jazzy/setup.bash
+  ```
+- Clean and rebuild:
+  ```bash
+  rm -rf build install log
+  colcon build --symlink-install
+  ```
