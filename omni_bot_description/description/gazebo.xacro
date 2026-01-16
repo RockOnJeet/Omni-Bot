@@ -1,10 +1,18 @@
 <robot xmlns:xacro="http://www.ros.org/wiki/xacro">
   <gazebo>
-    <!-- Joint States -->
+    <!-- Joint States Publisher (for encoders and other passive joints) -->
     <plugin filename="gz-sim-joint-state-publisher-system" name="gz::sim::systems::JointStatePublisher">
+      <topic>joint_states</topic>
       <joint_name>encoder_joint_X</joint_name>
       <joint_name>encoder_joint_Y</joint_name>
-      <topic>joint_states</topic>
+      <joint_name>wheel_joint_0</joint_name>
+      <joint_name>wheel_joint_1</joint_name>
+      <joint_name>wheel_joint_2</joint_name>
+    </plugin>
+
+    <!-- Gazebo ros2_control plugin -->
+    <plugin filename="gz_ros2_control-system" name="gz_ros2_control::GazeboSimROS2ControlPlugin">
+      <parameters>$(find omni_bot_sim)/config/omni_controller.yaml</parameters>
     </plugin>
   </gazebo>
 </robot>

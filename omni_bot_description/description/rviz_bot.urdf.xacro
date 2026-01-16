@@ -2,6 +2,7 @@
 <robot xmlns:xacro="http://www.ros.org/wiki/xacro" name="rviz_Omni-Bot">
   <!--           Includes            -->
   <xacro:include filename="wheels.xacro" />
+  <xacro:include filename="ros2_control.xacro" />
 
   <!--      Parameters (in SI)       -->
   <xacro:property name="base_side_length" value="1.05" />

@@ -1,0 +1,22 @@
+# ros2_control configuration for omni_controller
+# Manages velocity controllers for 3-wheel omni-directional robot
+
+controller_manager:
+  ros__parameters:
+    update_rate: 100  # Hz
+    use_sim_time: true
+
+    # Omni controller - receives wheel velocity commands
+    omni_controller:
+      type: velocity_controllers/JointGroupVelocityController
+
+# Configuration for omni_controller
+omni_controller:
+  ros__parameters:
+    # Joint names (wheel_joint_0=right, wheel_joint_1=front, wheel_joint_2=left)
+    # Order must match base_controller output: [front, left, right]
+    # So we map to: [wheel_joint_1, wheel_joint_2, wheel_joint_0]
+    joints:
+      - wheel_joint_0  # front wheel (0°)
+      - wheel_joint_1  # left wheel (120°)
+      - wheel_joint_2  # right wheel (240°)

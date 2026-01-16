@@ -62,9 +62,9 @@
 #   direction: GZ_TO_ROS
 
 ## Services: world control (unpause/pause) -- adjust world name if needed
-- service_name: "/world/empty/control"
-  ros_type_name: "ros_gz_interfaces/srv/ControlWorld"
-  gz_req_type_name: "gz.msgs.WorldControl"
-  gz_rep_type_name: "gz.msgs.Boolean"
+# - service_name: "/world/empty/control"
+#   ros_type_name: "ros_gz_interfaces/srv/ControlWorld"
+#   gz_req_type_name: "gz.msgs.WorldControl"
+#   gz_rep_type_name: "gz.msgs.Boolean"
 
 ## End of config. Verify topic names and gz message types against your Gazebo world.

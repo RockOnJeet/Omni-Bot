@@ -24,7 +24,7 @@
       <child link="wheel_${i}" />
       <origin xyz="${x} ${y} 0" rpy="0 ${pi/2} ${angle}" />
       <axis xyz="0 0 1" />
-      <dynamics damping="25e-4" friction="1e-4"/>
+      <dynamics damping="25e-4" friction="1e-4" />
     </joint>
 
     <link name="wheel_${i}">
@@ -37,12 +37,7 @@
       <!-- Fake Inertial (Actual values in plate)-->
       <inertial>
         <mass value="1e-6" />
-        <inertia ixx="1e-9" 
-          ixy="0" 
-          ixz="0"
-          iyy="1e-9" 
-          iyz="0"
-          izz="1e-9"/>
+        <inertia ixx="1e-9" ixy="0" ixz="0" iyy="1e-9" iyz="0" izz="1e-9" />
       </inertial>
     </link>
 
@@ -102,7 +97,7 @@
       <child link="${parent}_roller_${i}" />
       <origin xyz="${x} ${y} 0" rpy="${pi/2} 0 ${angle}" />
       <axis xyz="0 0 1" />
-      <dynamics damping="1e-5" friction="1e-5"/>
+      <dynamics damping="1e-5" friction="1e-5" />
     </joint>
 
     <link name="${parent}_roller_${i}">
@@ -124,13 +119,8 @@
         </geometry>
       </collision>
       <inertial>
-          <mass value="${roller_mass}"/>
-          <inertia ixx="3.111e-7"
-            ixy="0.0"
-            ixz="0.0"
-            iyy="3.600e-7"
-            iyz="0.0"
-            izz="3.600e-7"/>
+        <mass value="${roller_mass}" />
+        <inertia ixx="3.111e-7" ixy="0.0" ixz="0.0" iyy="3.600e-7" iyz="0.0" izz="3.600e-7" />
       </inertial>
     </link>
   </xacro:macro>
@@ -155,12 +145,7 @@
       <!-- Fake Inertial (Actual values in plate)-->
       <inertial>
         <mass value="1e-6" />
-        <inertia ixx="1e-9" 
-          ixy="0" 
-          ixz="0"
-          iyy="1e-9" 
-          iyz="0"
-          izz="1e-9"/>
+        <inertia ixx="1e-9" ixy="0" ixz="0" iyy="1e-9" iyz="0" izz="1e-9" />
       </inertial>
     </link>
 
@@ -174,7 +159,7 @@
     <xacro:property name="x" value="${(bot_radius + wheel_offset) * cos(angle)}" />
     <xacro:property name="y" value="${(bot_radius + wheel_offset) * sin(angle)}" />
 
-    <joint name="wheel_joint_${i}" type="fixed">
+    <joint name="wheel_joint_${i}" type="continuous">
       <parent link="${parent}" />
       <child link="wheel_${i}" />
       <origin xyz="${x} ${y} 0" rpy="0 ${pi/2} ${angle}" />

@@ -100,6 +100,40 @@ def generate_launch_description():
         }.items()
     )
 
+    # Kinematics node (cmd_vel -> wheel velocities)
+    base_controller_node = Node(
+        package='omni_bot_base',
+        executable='base_controller',
+        name='omni_bot_base_controller',
+        output='screen',
+        parameters=[{
+            'wheel_radius': 0.076,
+            'robot_radius': 0.4185,
+            'use_sim_time': True
+        }]
+    )
+
+    # Odometry node (encoder fusion, translation-only)
+    odometry_node = Node(
+        package='omni_bot_odometry',
+        executable='odometry_node',
+        name='omni_bot_odometry_node',
+        output='screen',
+        parameters=[{
+            'encoder_radius': 0.05,
+            'update_rate': 60.0,
+            'use_sim_time': True
+        }]
+    )
+
+    omni_controller_spawner = Node(
+        package='controller_manager',
+        executable='spawner',
+        arguments=['omni_controller'],
+        ros_arguments=['--remap', 'use_sim_time:=true'],
+        output='screen'
+    )
+
     return LaunchDescription([
         # Arguments
         world_arg,
@@ -107,5 +141,9 @@ def generate_launch_description():
         gz_sim_launch,
         spawn_entity,
         ros_gz_bridge,
-        rviz_node
+        rviz_node,
+        base_controller_node,
+        odometry_node,
+        # ros2_control spawners (after robot spawned)
+        omni_controller_spawner
     ])
