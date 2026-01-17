@@ -123,8 +123,8 @@ class OmniBaseController(Node):
         # If timeout occurred, stop the robot
         if time_since_last_cmd > self.cmd_vel_timeout:
             if not self.is_timed_out:
-                # First timeout detection - log warning and stop robot
-                self.get_logger().warn(
+                # First timeout detection - log debug and stop robot
+                self.get_logger().debug(
                     f'cmd_vel timeout ({self.cmd_vel_timeout}s) - stopping robot'
                 )
                 self.publish_wheel_velocities(0.0, 0.0, 0.0)
@@ -132,7 +132,7 @@ class OmniBaseController(Node):
         else:
             # Reset timeout flag when receiving commands again
             if self.is_timed_out:
-                self.get_logger().info('cmd_vel resumed - timeout cleared')
+                self.get_logger().debug('cmd_vel resumed - timeout cleared')
                 self.is_timed_out = False
 
     def publish_wheel_velocities(self, front_vel, left_vel, right_vel):

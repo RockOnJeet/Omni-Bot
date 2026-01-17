@@ -47,6 +47,34 @@
     </inertial>
   </link>
 
+  <!-- IMU frame placed 0.10 m above base_link origin -->
+  <joint name="imu_joint" type="fixed">
+    <parent link="base_link" />
+    <child link="imu_link" />
+    <origin xyz="0 0 0.05" rpy="0 0 0" />
+  </joint>
+
+  <link name="imu_link">
+    <inertial>
+      <mass value="0.01" />
+      <inertia ixx="1e-6" ixy="0" ixz="0" iyy="1e-6" iyz="0" izz="1e-6" />
+    </inertial>
+    <visual>
+      <origin xyz="0 0 0" rpy="0 0 0" />
+      <geometry>
+        <box size="0.02 0.02 0.01" />
+      </geometry>
+      <material name="blue">
+        <color rgba="0.2 0.2 0.8 0.8" />
+      </material>
+    </visual>
+    <collision>
+      <geometry>
+        <box size="0.02 0.02 0.01" />
+      </geometry>
+    </collision>
+  </link>
+
   <xacro:wheel i="0" parent="base_link" />
   <xacro:wheel i="1" parent="base_link" />
   <xacro:wheel i="2" parent="base_link" />

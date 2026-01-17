@@ -14,5 +14,24 @@
     <plugin filename="gz_ros2_control-system" name="gz_ros2_control::GazeboSimROS2ControlPlugin">
       <parameters>$(find omni_bot_sim)/config/omni_controller.yaml</parameters>
     </plugin>
+
+    <!-- IMU plugin -->
+    <plugin filename="gz-sim-imu-system" name="gz::sim::systems::Imu">
+    </plugin>
+
+  </gazebo>
+
+  <!-- Ideal IMU attached to imu_link -->
+  <gazebo reference="imu_link">
+    <sensor name="imu_sensor" type="imu">
+      <always_on>1</always_on>
+      <update_rate>200</update_rate>
+      <visualize>true</visualize>
+      <topic>imu</topic>
+      <pose>0 0 0 0 0 0</pose>
+      <imu>
+        <!-- Ideal IMU: no noise configured -->
+      </imu>
+    </sensor>
   </gazebo>
 </robot>
