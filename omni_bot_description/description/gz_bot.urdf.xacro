@@ -1,7 +1,10 @@
 <?xml version="1.0"?>
 <robot xmlns:xacro="http://www.ros.org/wiki/xacro" name="Omni-Bot">
   <!--           Includes            -->
+  <xacro:include filename="inertial_macros.xacro" />
   <xacro:include filename="wheels.xacro" />
+  <xacro:include filename="lidar.xacro" />
+  <xacro:include filename="imu.xacro" />
   <xacro:include filename="gazebo.xacro" />
 
   <!--      Parameters (in SI)       -->
@@ -47,33 +50,15 @@
     </inertial>
   </link>
 
-  <!-- IMU frame placed 0.10 m above base_link origin -->
-  <joint name="imu_joint" type="fixed">
-    <parent link="base_link" />
-    <child link="imu_link" />
-    <origin xyz="0 0 0.05" rpy="0 0 0" />
-  </joint>
+  <!-- IMU frame placed 0.148 m above base_footprint origin -->
+  <xacro:imu_mpu6050 parent="base_footprint">
+    <origin xyz="0 0 0.148" rpy="0 0 0" />
+  </xacro:imu_mpu6050>
 
-  <link name="imu_link">
-    <inertial>
-      <mass value="0.01" />
-      <inertia ixx="1e-6" ixy="0" ixz="0" iyy="1e-6" iyz="0" izz="1e-6" />
-    </inertial>
-    <visual>
-      <origin xyz="0 0 0" rpy="0 0 0" />
-      <geometry>
-        <box size="0.02 0.02 0.01" />
-      </geometry>
-      <material name="blue">
-        <color rgba="0.2 0.2 0.8 0.8" />
-      </material>
-    </visual>
-    <collision>
-      <geometry>
-        <box size="0.02 0.02 0.01" />
-      </geometry>
-    </collision>
-  </link>
+  <!-- LiDAR mounted 0.235m above base_footprint -->
+  <xacro:ydlidar_g2 parent="base_footprint">
+    <origin xyz="0 0 0.25" rpy="0 0 0" />
+  </xacro:ydlidar_g2>
 
   <xacro:wheel i="0" parent="base_link" />
   <xacro:wheel i="1" parent="base_link" />

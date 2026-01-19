@@ -1,0 +1,64 @@
+<?xml version="1.0"?>
+<robot xmlns:xacro="http://www.ros.org/wiki/xacro">
+  <!-- YDLiDAR G2 Sensor Macro
+       Configuration based on: https://docs.ydlidar.com/en/latest/G2.html
+       Reference: YDLidar_G2.md (Factory Fresh Plug-and-Play Specifications)
+       
+       YDLiDAR G2 Hardware Specifications:
+       ────────────────────────────────────
+       Sensor Type: 2D LiDAR (Factory plug-and-play)
+       Field of View: 360° (full 360° scanning)
+       Range: 0.12m to 12.0m
+       Motor Speed: ~8 Hz (480 RPM) - continuous operation
+       Sampling Rate: ~5000 samples per second
+       Angular Resolution: ~0.36°
+       
+       Physical Characteristics:
+       - Height: 42mm
+       - Radius: 36mm
+       - Mass: 190g
+       
+       Communication:
+       - Interface: UART via USB-TTL (Virtual COM Port)
+       - Baud Rate: 230400 bps (factory default)
+       - Data Output: Real-time streaming packets
+       - Protocol: YDLidar proprietary format
+       - Data Type: Distance + Intensity
+  -->
+
+  <!-- YDLiDAR G2 Macro: spawn a YDLiDAR G2 sensor with position and orientation -->
+  <xacro:macro name="ydlidar_g2" params="parent *origin">
+    <joint name="lidar_joint" type="fixed">
+      <xacro:insert_block name="origin" />
+      <parent link="${parent}" />
+      <child link="lidar_link" />
+    </joint>
+
+    <link name="lidar_link">
+      <visual>
+        <origin xyz="0 0 -0.01" rpy="0 0 0" />
+        <geometry>
+          <!-- YDLiDAR G2: height=0.042m, radius=0.036m -->
+          <cylinder length="0.042" radius="0.036" />
+        </geometry>
+        <material name="red">
+          <color rgba="1 0 0 1" />
+        </material>
+      </visual>
+      <collision>
+        <origin xyz="0 0 -0.01" rpy="0 0 0" />
+        <geometry>
+          <cylinder length="0.042" radius="0.036" />
+        </geometry>
+      </collision>
+      <inertial>
+        <origin xyz="0 0 -0.01" rpy="0 0 0" />
+        <mass value="0.190" />
+        <!-- YDLiDAR G2: mass=190g -->
+        <inertia ixx="0.000067" ixy="0.0" ixz="0.0" iyy="0.000067" iyz="0.0" izz="0.000110" />
+      </inertial>
+    </link>
+  </xacro:macro>
+
+</robot>
+

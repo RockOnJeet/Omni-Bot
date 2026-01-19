@@ -1,0 +1,38 @@
+<?xml version="1.0"?>
+<robot xmlns:xacro="http://www.ros.org/wiki/xacro">
+  <!-- IMU Sensor Macro -->
+
+  <!-- IMU Sensor Macro: spawn an IMU sensor with position and orientation -->
+  <xacro:macro name="imu_mpu6050" params="parent *origin">
+    <joint name="imu_joint" type="fixed">
+      <xacro:insert_block name="origin" />
+      <parent link="${parent}" />
+      <child link="imu_link" />
+    </joint>
+
+    <link name="imu_link">
+      <inertial>
+        <origin xyz="0 0 0" rpy="0 0 0" />
+        <mass value="0.01" />
+        <!-- Standard compact IMU: 20x20x10mm box, 10g mass -->
+        <inertia ixx="1e-6" ixy="0.0" ixz="0.0" iyy="1e-6" iyz="0.0" izz="1e-6" />
+      </inertial>
+      <visual>
+        <origin xyz="0 0 0" rpy="0 0 0" />
+        <geometry>
+          <box size="0.02 0.015 0.003" />
+        </geometry>
+        <material name="dark_gray">
+          <color rgba="0.25 0.25 0.25 1.0" />
+        </material>
+      </visual>
+      <collision>
+        <origin xyz="0 0 0" rpy="0 0 0" />
+        <geometry>
+          <box size="0.02 0.015 0.003" />
+        </geometry>
+      </collision>
+    </link>
+  </xacro:macro>
+
+</robot>

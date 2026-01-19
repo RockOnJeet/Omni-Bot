@@ -55,7 +55,7 @@ def generate_launch_description():
             ])
         ),
         launch_arguments={
-            'gz_args': [TextSubstitution(text='-r -v3 '), world],
+            'gz_args': [TextSubstitution(text='-r -v4 '), world],
             'on_exit_shutdown': 'true'  # Ensures shutdown of all nodes upon Gazebo exit
         }.items()
     )

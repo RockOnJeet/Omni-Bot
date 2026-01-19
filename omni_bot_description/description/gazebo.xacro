@@ -1,5 +1,18 @@
 <robot xmlns:xacro="http://www.ros.org/wiki/xacro">
+  <!-- Gazebo System Plugins and Sensor Configuration
+       CRITICAL: Define system plugins here for all Gazebo features (sensors, control, physics)
+       Reference: https://github.com/gazebosim/gz-sim
+  -->
+
   <gazebo>
+    <!-- CRITICAL: Gazebo Sensors System Plugin
+         Without this plugin, sensors (LiDAR, IMU, cameras) will NOT publish topics.
+         This plugin must be included either here (URDF/Xacro) or in the world file (but not both).
+    -->
+    <plugin filename="gz-sim-sensors-system" name="gz::sim::systems::Sensors">
+      <render_engine>ogre2</render_engine>
+    </plugin>
+
     <!-- Joint States Publisher (for encoders and other passive joints) -->
     <plugin filename="gz-sim-joint-state-publisher-system" name="gz::sim::systems::JointStatePublisher">
       <topic>joint_states</topic>
@@ -24,14 +37,61 @@
   <!-- Ideal IMU attached to imu_link -->
   <gazebo reference="imu_link">
     <sensor name="imu_sensor" type="imu">
-      <always_on>1</always_on>
+      <topic>imu</topic>
+      <always_on>true</always_on>
       <update_rate>200</update_rate>
       <visualize>true</visualize>
-      <topic>imu</topic>
       <pose>0 0 0 0 0 0</pose>
       <imu>
         <!-- Ideal IMU: no noise configured -->
       </imu>
     </sensor>
   </gazebo>
+
+  <!-- Gazebo LiDAR Plugin Configuration for YDLiDAR G2 -->
+  <!-- CRITICAL: Gazebo plugin for GPU LiDAR -->
+  <!-- Reference: YDLidar_G2.md (Factory Fresh Plug-and-Play Specifications) -->
+  <gazebo reference="lidar_link">
+    <material>Gazebo/Black</material>
+
+    <!-- YDLiDAR G2 Hardware Characteristics:
+         - Field of View: 360° (full continuous rotation)
+         - Motor Speed: ~8 Hz (480 RPM)
+         - Sampling Rate: ~5000 samples/second
+         - Angular Resolution: ~0.36°
+         - Range: 0.12m to 12.0m
+         - Communication: UART via USB-TTL @ 230400 bps (plug-and-play)
+    -->
+    <!-- Type: gpu_lidar (not ray or lidar) for modern Gazebo (Harmonic/Garden) -->
+    <sensor name="lidar_sensor" type="gpu_lidar">
+      <pose>0 0 0 0 0 0</pose>
+      <visualize>true</visualize>
+      <update_rate>10</update_rate>
+      <topic>scan</topic>
+
+      <!-- CRITICAL: Sets the frame_id in LaserScan messages -->
+      <!-- MUST match the link name (lidar_link) for TF consistency -->
+      <!-- Without this, Gazebo auto-generates frame like robot_name/parent_link/sensor_name -->
+      <gz_frame_id>lidar_link</gz_frame_id>
+      <lidar>
+        <scan>
+          <horizontal>
+            <!-- YDLiDAR G2: 360° full rotation scanning -->
+            <!-- 1.0° resolution = 360 samples per complete rotation -->
+            <!-- Native sensor: ~0.36° angular resolution, 5000 samples/sec -->
+            <samples>360</samples>
+            <!-- Full 360° field of view: -180° to +180° -->
+            <min_angle>-3.14159</min_angle>
+            <max_angle>3.14159</max_angle>
+          </horizontal>
+        </scan>
+        <range>
+          <!-- YDLiDAR G2 Range: 0.12m to 12.0m -->
+          <min>0.12</min>
+          <max>12.0</max>
+        </range>
+      </lidar>
+    </sensor>
+  </gazebo>
+
 </robot>

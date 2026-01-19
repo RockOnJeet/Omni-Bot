@@ -1,9 +1,22 @@
-## ros_gz_bridge YAML configuration for common Omni-Bot topics
-## NOTE: Many gz topic names and some gz message type names are guesses.
-## Please verify the exact Gazebo topic names used by your robot/world and
-## adjust the `gz_topic_name` and `gz_type_name` fields accordingly.
+## ros_gz_bridge YAML configuration for Omni-Bot ROS2-Gazebo integration
+## Reference: LIDAR_SETUP_GZ_ROS.md and YDLidar_G2.md
+##
+## YDLiDAR G2 Hardware Integration:
+## - Sensor: 2D LiDAR, 360° FOV, 0.12-12m range
+## - Motor Speed: ~8 Hz (480 RPM) continuous operation
+## - Sampling Rate: ~5000 samples/second (~0.36° angular resolution)
+## - Communication: UART via USB-TTL @ 230400 bps (plug-and-play)
+## - Data Output: Distance + Intensity (factory default)
+##
+## Bridge Configuration Notes:
+## 1. gz_topic_name must match <topic> in sensor definition (e.g., <topic>scan</topic>)
+## 2. Bridge converts Gazebo messages to ROS2 sensor_msgs format
+## 3. Clock sync is important for sim time and ROS 2 node synchronization
+## 4. LiDAR frame_id is set via <gz_frame_id> in sensor definition
+## 5. All sensor topics must have matching entries in this bridge config
 
 ## Clock (unidirectional from Gazebo -> ROS)
+## CRITICAL: Enables sim_time for synchronization across ROS 2 nodes
 - ros_topic_name: "clock"
   gz_topic_name: "clock"
   ros_type_name: "rosgraph_msgs/msg/Clock"
@@ -19,21 +32,33 @@
   direction: GZ_TO_ROS
   lazy: false
 
-## LIDAR (common mapping; adjust gz_topic_name if your sensor publishes elsewhere)
-# - ros_topic_name: "scan"
-#   gz_topic_name: "scan"
-#   ros_type_name: "sensor_msgs/msg/LaserScan"
-#   gz_type_name: "gz.msgs.LaserScan"
-#   direction: GZ_TO_ROS
-#   lazy: false
+## LiDAR Scan Data
+## CRITICAL: gz_topic_name must match <topic>scan</topic> in lidar sensor definition
+## YDLiDAR G2: 360° FOV, 10 Hz update rate (simulated)
+## Converts gz.msgs.LaserScan to sensor_msgs/msg/LaserScan with proper frame_id
+- ros_topic_name: "scan"
+  gz_topic_name: "scan"
+  ros_type_name: "sensor_msgs/msg/LaserScan"
+  gz_type_name: "gz.msgs.LaserScan"
+  direction: GZ_TO_ROS
+  lazy: false
 
-## IMU
+## IMU (Inertial Measurement Unit)
 - ros_topic_name: "imu"
   gz_topic_name: "imu"
   ros_type_name: "sensor_msgs/msg/Imu"
   gz_type_name: "gz.msgs.IMU"
   direction: GZ_TO_ROS
   lazy: false 
+
+## Twist Command (velocity control)
+## BIDIRECTIONAL: allows both ROS and Gazebo to control robot velocity
+- ros_topic_name: "cmd_vel"
+  gz_topic_name: "cmd_vel"
+  ros_type_name: "geometry_msgs/msg/Twist"
+  gz_type_name: "gz.msgs.Twist"
+  direction: BIDIRECTIONAL
+  lazy: true
 
 ## Camera image example (if present)
 # - ros_topic_name: "camera/image"
@@ -43,15 +68,7 @@
 #   direction: GZ_TO_ROS
 #   lazy: true
 
-## cmd_vel (commands from both ROS and Gazebo to drive robot)
-- ros_topic_name: "cmd_vel"
-  gz_topic_name: "cmd_vel"
-  ros_type_name: "geometry_msgs/msg/Twist"
-  gz_type_name: "gz.msgs.Twist"
-  direction: BIDIRECTIONAL
-  lazy: true
-
-## Battery (optional)
+## Battery state (optional)
 # - ros_topic_name: "/battery_state"
 #   gz_topic_name: "/battery_state"
 #   ros_type_name: "sensor_msgs/msg/BatteryState"
@@ -67,4 +84,8 @@
 #   gz_req_type_name: "gz.msgs.WorldControl"
 #   gz_rep_type_name: "gz.msgs.Boolean"
 
-## End of config. Verify topic names and gz message types against your Gazebo world.
+## Troubleshooting:
+## 1. No /scan topic: Ensure gz-sim-sensors-system plugin is in URDF and bridge is running
+## 2. Queue full warnings: Check that LaserScan frame_id (gz_frame_id) is set correctly
+## 3. Topics not published: Verify gz_topic_name matches sensor definition
+## 4. Timestamp issues: Enable sim_time via clock bridge above
