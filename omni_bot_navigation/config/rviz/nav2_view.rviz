@@ -1,0 +1,10 @@
+# Create a placeholder RViz config for navigation
+# This will be populated with proper displays when you first run
+# You can use Nav2 default or customize with:
+# - Map display
+# - Global/local costmap
+# - Global/local plan
+# - Robot footprint
+# - LaserScan
+# - TF
+# - Goal pose tool

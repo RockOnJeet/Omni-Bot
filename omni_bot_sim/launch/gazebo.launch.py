@@ -25,18 +25,35 @@ def generate_launch_description():
       * No dependency on ROS topics for spawning - uses -file flag with temp URDF.
     """
 
+    # Package shares
+    desc_pkg = get_package_share_directory('omni_bot_description')
+    sim_pkg = get_package_share_directory('omni_bot_sim')
+
     # Launch arguments: keep only optional 'world'. Everything else has sensible defaults.
     world_arg = DeclareLaunchArgument(
         'world', default_value='empty.sdf',
         description='Optional world file path (.sdf / .world). Empty = default empty world.'
     )
+    rviz_config_arg = DeclareLaunchArgument(
+        'rviz_config',
+        default_value=PathJoinSubstitution([
+            desc_pkg,
+            'config',
+            'rviz',
+            'gz_view.rviz'
+        ])
+    )
+
+    gui_arg = DeclareLaunchArgument(
+        'gui',
+        default_value='true',
+        description='Enable Gazebo GUI. Set to false for headless server-only mode.'
+    )
 
     # Configurations
     world = LaunchConfiguration('world')
-
-    # Package shares
-    desc_pkg = get_package_share_directory('omni_bot_description')
-    sim_pkg = get_package_share_directory('omni_bot_sim')
+    rviz_config_file = LaunchConfiguration('rviz_config')
+    gui = LaunchConfiguration('gui')
 
     # Path to xacro file (using gz_bot.urdf.xacro for Gazebo simulation)
     xacro_file = os.path.join(desc_pkg, 'description', 'gz_bot.urdf.xacro')
@@ -45,7 +62,14 @@ def generate_launch_description():
     robot_description_content = xacro.process_file(
         xacro_file).toxml()  # type: ignore
 
-    # Compose gz_args: run immediately (-r), verbosity 3, and optional world path
+    # Compose gz_args: run immediately (-r), verbosity 4, optional server-only (-s), and world path
+    from launch.substitutions import IfElseSubstitution
+    gz_args = [
+        TextSubstitution(text='-r -v4 '),
+        IfElseSubstitution(gui, '', TextSubstitution(text='-s ')),
+        world
+    ]
+
     gz_sim_launch = IncludeLaunchDescription(
         PythonLaunchDescriptionSource(
             PathJoinSubstitution([
@@ -55,7 +79,7 @@ def generate_launch_description():
             ])
         ),
         launch_arguments={
-            'gz_args': [TextSubstitution(text='-r -v4 '), world],
+            'gz_args': gz_args,
             'on_exit_shutdown': 'true'  # Ensures shutdown of all nodes upon Gazebo exit
         }.items()
     )
@@ -96,7 +120,8 @@ def generate_launch_description():
         ),
         launch_arguments={
             'use_sim_time': 'true',
-            'robot_model': 'rviz'
+            'robot_model': 'rviz',
+            'rviz_config': rviz_config_file
         }.items()
     )
 
@@ -137,6 +162,8 @@ def generate_launch_description():
     return LaunchDescription([
         # Arguments
         world_arg,
+        rviz_config_arg,
+        gui_arg,
         # Actions
         gz_sim_launch,
         spawn_entity,
