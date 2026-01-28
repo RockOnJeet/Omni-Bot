@@ -11,12 +11,12 @@
 
 // MPU6050 mpu;
 MPU6050 mpu6050(Wire);
-byte packet[64];
+// byte packet[64];
 // Quaternion q;
 // VectorFloat gravity;
-float ypr[3];
-int16_t ax, ay, az;
-int16_t gx, gy, gz;
+// float ypr[3];
+// int16_t ax, ay, az;
+// int16_t gx, gy, gz;
 
 // Pins
 const byte EncoderX[2] = {2, 4}; // X encoder pins
@@ -60,14 +60,12 @@ void rightEncoderISR()
 void setup()
 {
   Serial.begin(115200);
-  // while (!Serial)
-  //   ;
+  while (!Serial);
   Serial.setTimeout(3);
 
   // Set up IMU
+  Wire.setClock(200000); // 200kHz I2C clock. Comment on this line if having compilation difficulties
   Wire.begin();
-  Wire.setClock(400000); // 400kHz I2C clock. Comment on this line if having
-                         // compilation difficulties
   // mpu.initialize();
   // if (mpu.testConnection() == 0) {
   //   Serial.println(F("MPU6050 connection failed"));
@@ -190,7 +188,7 @@ void loop()
   //   }
   // }
   mpu6050.update();
-  Serial.print(mpu6050.getAngleZ() * DEG_TO_RAD);
+  Serial.print(float(mpu6050.getAngleZ() * DEG_TO_RAD));
   Serial.print(F("}\n"));
   Serial.flush(); // Ensure all data is sent before delay
 
