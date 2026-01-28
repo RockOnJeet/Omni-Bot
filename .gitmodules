@@ -2,3 +2,6 @@
 	path = ydlidar_ros2_driver
 	url = https://github.com/YDLIDAR/ydlidar_ros2_driver.git
 	branch = humble
+[submodule "YDLidar-SDK"]
+	path = YDLidar-SDK
+	url = https://github.com/YDLIDAR/YDLidar-SDK.git
