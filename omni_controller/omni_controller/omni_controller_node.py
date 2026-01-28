@@ -1,10 +1,11 @@
 import rclpy
 from rclpy.node import Node
-from nav_msgs.msg import Odometry
+# from nav_msgs.msg import Odometry
 from geometry_msgs.msg import Twist
-from tf2_ros import TransformBroadcaster, TransformStamped
-from tf_transformations import quaternion_from_euler as quat_from_euler
+# from tf2_ros import TransformBroadcaster, TransformStamped
+# from tf_transformations import quaternion_from_euler as quat_from_euler
 from sensor_msgs.msg import JointState
+from sensor_msgs.msg import Imu
 
 import time
 import math
@@ -31,7 +32,7 @@ class OmniControllerNode(Node):
         # Encoder resolution
         self.declare_parameter('ticks_per_rev', 400)
         # Serial port
-        self.declare_parameter('port', '/dev/ttyACM0')
+        self.declare_parameter('port', '/dev/ttyUSB0')
         # Baudrate
         self.declare_parameter('baudrate', 115200)
         # Refresh rate of the controller
@@ -60,9 +61,10 @@ class OmniControllerNode(Node):
         self.timer = self.create_timer(
             1.0/self.refresh_rate, self.update_odometry)
 
-        self.odom_pub = self.create_publisher(Odometry, 'odom', 10)
+        # self.odom_pub = self.create_publisher(Odometry, 'odom', 10)
         self.joint_pub = self.create_publisher(JointState, 'joint_states', 10)
-        self.tf_broadcaster = TransformBroadcaster(self)
+        self.imu_pub = self.create_publisher(Imu, 'imu', 10)
+        # self.tf_broadcaster = TransformBroadcaster(self)
         self.vel_sub = self.create_subscription(
             Twist, 'cmd_vel', self.vel_callback, 10)
 
@@ -73,20 +75,23 @@ class OmniControllerNode(Node):
         self.enc_ang_vel = [0.0]*2  # [ang_velX, ang_velY]
 
         # Initialize Odom Message
-        self.odom_msg = Odometry()
-        self.odom_msg.header.frame_id = 'odom'
-        self.odom_msg.child_frame_id = 'base_link'
+        # self.odom_msg = Odometry()
+        # self.odom_msg.header.frame_id = 'odom'
+        # self.odom_msg.child_frame_id = 'base_link'
 
         # Initialize TF Message
-        self.tf_msg = TransformStamped()
-        self.tf_msg.header.frame_id = 'odom'
-        self.tf_msg.child_frame_id = 'base_link'
+        # self.tf_msg = TransformStamped()
+        # self.tf_msg.header.frame_id = 'odom'
+        # self.tf_msg.child_frame_id = 'base_link'
 
         # Initialize Joint State
         self.joint_msg = JointState()
         self.joint_msg.name = self.encoder_names
         self.joint_msg.position = [0.0]*3
         self.joint_msg.velocity = [0.0]*3
+
+        # Initialize IMU Message (we'll publish yaw only)
+        self.imu_msg = Imu()
 
         # Initialize Serial Port
         try:
@@ -95,15 +100,15 @@ class OmniControllerNode(Node):
 
             # Wait for Arduino to initialize
             timer = time.monotonic()
-            while self.serial.read() != b'!':
-                if time.monotonic() - timer > 8:
+            while self.serial.read() != b'#':
+                if time.monotonic() - timer > 12:
                     self.get_logger().error(
                         f'Failed to initialize serial port {self.port}')
                     self.destroy_node()
                     return
                 self.serial.write(b'?')
-            self.serial.write(b'!')  # Acknowledge
             self.serial.flush()
+            self.serial.write(b'!')  # Acknowledge
             self.get_logger().info(
                 f'Serial port {self.port} opened successfully')
 
@@ -177,14 +182,14 @@ class OmniControllerNode(Node):
 
     def publish_topics(self, current_time):
         # Publish Odom
-        self.odom_msg.header.stamp = current_time
-        self.odom_msg.pose.pose.position.x = self.pose[0]
-        self.odom_msg.pose.pose.position.y = self.pose[1]
-        self.odom_msg.pose.pose.orientation.x = 0.0
-        self.odom_msg.pose.pose.orientation.y = 0.0
-        self.odom_msg.pose.pose.orientation.z = quat_from_euler(0.0, 0.0, self.pose[2])[2]
-        self.odom_msg.pose.pose.orientation.w = quat_from_euler(0.0, 0.0, self.pose[2])[3]
-        self.odom_pub.publish(self.odom_msg)
+        # self.odom_msg.header.stamp = current_time
+        # self.odom_msg.pose.pose.position.x = self.pose[0]
+        # self.odom_msg.pose.pose.position.y = self.pose[1]
+        # self.odom_msg.pose.pose.orientation.x = 0.0
+        # self.odom_msg.pose.pose.orientation.y = 0.0
+        # self.odom_msg.pose.pose.orientation.z = quat_from_euler(0.0, 0.0, self.pose[2])[2]
+        # self.odom_msg.pose.pose.orientation.w = quat_from_euler(0.0, 0.0, self.pose[2])[3]
+        # self.odom_pub.publish(self.odom_msg)
 
         # Publish Joint States
         self.joint_msg.header.stamp = current_time
@@ -192,15 +197,25 @@ class OmniControllerNode(Node):
         self.joint_msg.velocity = self.enc_ang_vel
         self.joint_pub.publish(self.joint_msg)
 
+        # Publish IMU with yaw-only orientation (roll=pitch=0)
+        yaw = self.pose[2]
+        half_yaw = yaw / 2.0
+        self.imu_msg.header.stamp = current_time
+        self.imu_msg.orientation.x = 0.0
+        self.imu_msg.orientation.y = 0.0
+        self.imu_msg.orientation.z = math.sin(half_yaw)
+        self.imu_msg.orientation.w = math.cos(half_yaw)
+        self.imu_pub.publish(self.imu_msg)
+
         # Publish TF
-        self.tf_msg.header.stamp = current_time
-        self.tf_msg.transform.translation.x = self.pose[0]
-        self.tf_msg.transform.translation.y = self.pose[1]
-        self.tf_msg.transform.rotation.x = 0.0
-        self.tf_msg.transform.rotation.y = 0.0
-        self.tf_msg.transform.rotation.z = quat_from_euler(0.0, 0.0, self.pose[2])[2]
-        self.tf_msg.transform.rotation.w = quat_from_euler(0.0, 0.0, self.pose[2])[3]
-        self.tf_broadcaster.sendTransform(self.tf_msg)
+        # self.tf_msg.header.stamp = current_time
+        # self.tf_msg.transform.translation.x = self.pose[0]
+        # self.tf_msg.transform.translation.y = self.pose[1]
+        # self.tf_msg.transform.rotation.x = 0.0
+        # self.tf_msg.transform.rotation.y = 0.0
+        # self.tf_msg.transform.rotation.z = quat_from_euler(0.0, 0.0, self.pose[2])[2]
+        # self.tf_msg.transform.rotation.w = quat_from_euler(0.0, 0.0, self.pose[2])[3]
+        # self.tf_broadcaster.sendTransform(self.tf_msg)
 
     def destroy_node(self):
         self.serial.close()

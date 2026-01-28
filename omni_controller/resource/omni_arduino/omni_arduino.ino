@@ -1,26 +1,29 @@
 // IMU
-#include <I2Cdev.h>
-#include <MPU6050_6Axis_MotionApps20.h>
+#include <MPU6050_tockn.h>
+#include <Wire.h>
+// #include <I2Cdev.h>
+// #include <MPU6050_6Axis_MotionApps20.h>
 
 // Constants
-#define IMU_YPR_MODE  1     // Set 0 to enable Binary Output
-#define REFRESH_RATE  65.0  // Hz
+#define IMU_YPR_MODE 1    // Set 0 to enable Binary Output
+#define REFRESH_RATE 65.0 // Hz
 #define TICKS_PER_REV 400
 
-MPU6050 mpu;
+// MPU6050 mpu;
+MPU6050 mpu6050(Wire);
 byte packet[64];
-Quaternion q;
-VectorFloat gravity;
+// Quaternion q;
+// VectorFloat gravity;
 float ypr[3];
 int16_t ax, ay, az;
 int16_t gx, gy, gz;
 
 // Pins
-const byte EncoderX[2] = {2, 4};  // X encoder pins
-const byte EncoderY[2] = {3, 5};  // Y encoder pins
-const byte MotorF[2] = {9, 6};    // Front motor pins (PWM, DIR)
-const byte MotorL[2] = {10, 7};   // Left motor pins (PWM, DIR)
-const byte MotorR[2] = {11, 8};   // Right motor pins (PWM, DIR)
+const byte EncoderX[2] = {2, 4}; // X encoder pins
+const byte EncoderY[2] = {3, 5}; // Y encoder pins
+const byte MotorF[2] = {9, 6};   // Front motor pins (PWM, DIR)
+const byte MotorL[2] = {10, 7};  // Left motor pins (PWM, DIR)
+const byte MotorR[2] = {11, 8};  // Right motor pins (PWM, DIR)
 
 // Variables
 volatile long encTicks[2];
@@ -30,55 +33,74 @@ unsigned long prevMillis;
 String data;
 
 // Interrupt Service Routines
-void leftEncoderISR() {
-  if (digitalRead(EncoderX[1]) == HIGH) {
+void leftEncoderISR()
+{
+  if (digitalRead(EncoderX[1]) == HIGH)
+  {
     encTicks[0]++;
-  } else {
+  }
+  else
+  {
     encTicks[0]--;
   }
 }
 
-void rightEncoderISR() {
-  if (digitalRead(EncoderY[1]) != HIGH) {
+void rightEncoderISR()
+{
+  if (digitalRead(EncoderY[1]) != HIGH)
+  {
     encTicks[1]++;
-  } else {
+  }
+  else
+  {
     encTicks[1]--;
   }
 }
 
-void setup() {
+void setup()
+{
   Serial.begin(115200);
-  while (!Serial);
+  // while (!Serial)
+  //   ;
   Serial.setTimeout(3);
 
   // Set up IMU
   Wire.begin();
-  Wire.setClock(400000);  // 400kHz I2C clock. Comment on this line if having compilation difficulties
-  mpu.initialize();
-  if (mpu.testConnection() == 0) {
-    Serial.println(F("MPU6050 connection failed"));
-    while (true) delay(1000);
-  }
-  uint8_t devStatus = mpu.dmpInitialize();
-  if (devStatus != 0) {
-    Serial.print(F("DMP initialization failed: "));
-    Serial.println(devStatus);
-    while (true) delay(1000);
-  }
-  mpu.CalibrateAccel(6);
-  mpu.CalibrateGyro(6);
+  Wire.setClock(400000); // 400kHz I2C clock. Comment on this line if having
+                         // compilation difficulties
+  // mpu.initialize();
+  // if (mpu.testConnection() == 0) {
+  //   Serial.println(F("MPU6050 connection failed"));
+  //   while (true)
+  //     delay(1000);
+  // }
+  // uint8_t devStatus = mpu.dmpInitialize();
+  // if (devStatus != 0) {
+  //   Serial.print(F("DMP initialization failed: "));
+  //   Serial.println(devStatus);
+  //   while (true)
+  //     delay(1000);
+  // }
+  // mpu.CalibrateAccel(6);
+  // mpu.CalibrateGyro(6);
+  Wire.begin();
+  mpu6050.begin();
+  mpu6050.calcGyroOffsets(true);
   Serial.println(F("Ready"));
-  if (IMU_YPR_MODE) mpu.setDMPEnabled(true);
+  // if (IMU_YPR_MODE)
+  //   mpu.setDMPEnabled(true);
 
   // Set up motors
-  for (byte i = 0; i < 2; i++) {
+  for (byte i = 0; i < 2; i++)
+  {
     pinMode(MotorF[i], OUTPUT);
     pinMode(MotorL[i], OUTPUT);
     pinMode(MotorR[i], OUTPUT);
   }
 
   // Set up encoders
-  for (byte i = 0; i < 2; i++) {
+  for (byte i = 0; i < 2; i++)
+  {
     pinMode(EncoderX[i], INPUT_PULLUP);
     pinMode(EncoderY[i], INPUT_PULLUP);
   }
@@ -91,24 +113,37 @@ void setup() {
   data.reserve(25);
 
   // Initialize Sync
-  while (Serial.read() != '?') { delay(10); }
-  Serial.write('!');
-  while (Serial.read() != '!') { delay(10); }
+  while (Serial.read() != '?')
+  {
+    delay(10);
+  }
+  while (Serial.available())
+    Serial.read(); // Clear the buffer
+  Serial.write('#');
+  while (Serial.read() != '!')
+  {
+    delay(10);
+  }
 }
 
-void loop() {
+void loop()
+{
   // Parse PWM commands
-  if (Serial.available() > 0) {
+  if (Serial.available() > 0)
+  {
     data = Serial.readStringUntil('\n');
-    data.trim();                                   // Remove any leading/trailing whitespace
-    while (Serial.available() > 0) Serial.read();  // Clear the buffer
-    if (data.startsWith("[") && data.endsWith("]")) {
+    data.trim(); // Remove any leading/trailing whitespace
+    while (Serial.available() > 0)
+      Serial.read(); // Clear the buffer
+    if (data.startsWith("[") && data.endsWith("]"))
+    {
       data.remove(0, 1);
-      data.remove(data.length() - 1, 1);  // Remove '[' and ']'
+      data.remove(data.length() - 1, 1); // Remove '[' and ']'
 
       // Parse data for 3 values
       int fwdPWM = data.substring(0, data.indexOf("|")).toInt();
-      int leftPWM = data.substring(data.indexOf("|") + 1, data.lastIndexOf("|")).toInt();
+      int leftPWM =
+          data.substring(data.indexOf("|") + 1, data.lastIndexOf("|")).toInt();
       int rightPWM = data.substring(data.lastIndexOf("|") + 1).toInt();
 
       // Set motor direction and speed
@@ -126,35 +161,39 @@ void loop() {
   // Send encoder data
   Serial.write('{');
   // Calculate Angles
-  for (byte i = 0; i < 2; i++) {
+  for (byte i = 0; i < 2; i++)
+  {
     angles[i] = (encTicks[i] * 2.0 * PI) / TICKS_PER_REV;
     Serial.print(angles[i]);
     Serial.write('|');
   }
 
   // Calucalte Velocites
-  for (byte i = 0; i < 2; i++) {
-    velocity[i] = (angles[i] - prevAngles[i]) * REFRESH_RATE;  // rad/s
+  for (byte i = 0; i < 2; i++)
+  {
+    velocity[i] = (angles[i] - prevAngles[i]) * REFRESH_RATE; // rad/s
     prevAngles[i] = angles[i];
     Serial.print(velocity[i]);
     Serial.write('|');
   }
 
   // Calulate Yaw
-  if (mpu.dmpGetCurrentFIFOPacket(packet)) {
-    if (IMU_YPR_MODE) {
-      mpu.dmpGetQuaternion(&q, packet);
-      mpu.dmpGetGravity(&gravity, &q);
-      mpu.dmpGetYawPitchRoll(ypr, &q, &gravity);
-      Serial.print(-ypr[0]);
-    } else {
-      mpu.getMotion6(&ax, &ay, &az, &gx, &gy, &gz);
-      Serial.print(-atan2(ay, az));
-    }
-  }
+  // if (mpu.dmpGetCurrentFIFOPacket(packet)) {
+  //   if (IMU_YPR_MODE) {
+  //     mpu.dmpGetQuaternion(&q, packet);
+  //     mpu.dmpGetGravity(&gravity, &q);
+  //     mpu.dmpGetYawPitchRoll(ypr, &q, &gravity);
+  //     Serial.print(-ypr[0]);
+  //   } else {
+  //     mpu.getMotion6(&ax, &ay, &az, &gx, &gy, &gz);
+  //     Serial.print(-atan2(ay, az));
+  //   }
+  // }
+  mpu6050.update();
+  Serial.print(mpu6050.getAngleZ() * DEG_TO_RAD);
   Serial.print(F("}\n"));
-  Serial.flush();  // Ensure all data is sent before delay
+  Serial.flush(); // Ensure all data is sent before delay
 
-  delay(1000 / REFRESH_RATE);  // Adjust as needed
+  delay(1000 / REFRESH_RATE); // Adjust as needed
   // delay(100); // Prevents serial buffer overflow
 }
