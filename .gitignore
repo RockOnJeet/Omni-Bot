@@ -1,0 +1,58 @@
+
+# Typical ROS / Catkin / Colcon workspace ignores
+# Build and install artifacts
+build/
+devel/
+install/
+install_isolated/
+_build/
+_devel/
+prefix_override/
+
+# Colcon
+.colcon/
+.colcon_default/
+
+# Logs
+log/
+logs/
+
+# CMake and build system
+CMakeFiles/
+CMakeCache.txt
+cmake_install.cmake
+Makefile
+compile_commands.json
+
+# Python
+*.pyc
+__pycache__/
+.pytest_cache/
+*.egg-info/
+dist/
+eggs/
+*.egg
+*.whl
+venv/
+env/
+ENV/
+.env
+
+# Editor/OS files
+.vscode/
+.idea/
+*.swp
+*.swo
+.DS_Store
+Thumbs.db
+
+# ROS specifics
+*.bag
+*.bag.active
+*.db3
+
+# Misc
+*.log
+coverage/
+.coverage
+
