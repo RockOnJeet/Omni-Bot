@@ -19,14 +19,14 @@ class OmniControllerNode(Node):
 
         # Declare parameters
         self.declare_parameter('wheel_names', [
-                               'front_wheel_joint', 'left_wheel_joint', 'right_wheel_joint'])   # Names of the wheels
+                               'wheel_joint_0', 'wheel_joint_1', 'wheel_joint_2'])   # Names of the wheels
         # Radius of the wheels (m)
         self.declare_parameter('wheel_radius', 0.07)
         # Radius of the robot (m)
         self.declare_parameter('robot_radius', 0.45)
         # Names of the encoders
         self.declare_parameter(
-            'encoder_names', ['X_encoder_joint', 'Y_encoder_joint'])
+            'encoder_names', ['encoder_joint_X', 'encoder_joint_Y'])
         # Radius of Encoder Wheel (m)
         self.declare_parameter('encoder_radius', 0.05)
         # Encoder resolution
@@ -86,7 +86,7 @@ class OmniControllerNode(Node):
 
         # Initialize Joint State
         self.joint_msg = JointState()
-        self.joint_msg.name = self.encoder_names
+        self.joint_msg.name = self.encoder_names + self.wheel_names
         self.joint_msg.position = [0.0]*3
         self.joint_msg.velocity = [0.0]*3
 
@@ -193,8 +193,8 @@ class OmniControllerNode(Node):
 
         # Publish Joint States
         self.joint_msg.header.stamp = current_time
-        self.joint_msg.position = self.enc_ang
-        self.joint_msg.velocity = self.enc_ang_vel
+        self.joint_msg.position = self.enc_ang + [0.0]*3
+        self.joint_msg.velocity = self.enc_ang_vel + [0.0]*3
         self.joint_pub.publish(self.joint_msg)
 
         # Publish IMU with yaw-only orientation (roll=pitch=0)

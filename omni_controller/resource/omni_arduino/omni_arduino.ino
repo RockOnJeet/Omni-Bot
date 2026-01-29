@@ -60,12 +60,12 @@ void rightEncoderISR()
 void setup()
 {
   Serial.begin(115200);
-  while (!Serial);
+  while (!Serial)
+    delay(10);
   Serial.setTimeout(3);
 
   // Set up IMU
   Wire.setClock(200000); // 200kHz I2C clock. Comment on this line if having compilation difficulties
-  Wire.begin();
   // mpu.initialize();
   // if (mpu.testConnection() == 0) {
   //   Serial.println(F("MPU6050 connection failed"));
@@ -126,7 +126,53 @@ void setup()
 
 void loop()
 {
-  // Parse PWM commands
+  // Calculate target interval based on REFRESH_RATE
+  unsigned long interval = (unsigned long)(1000.0 / REFRESH_RATE);
+  unsigned long currentMillis = millis();
+
+  // Check if enough time has passed since last data send
+  if (currentMillis - prevMillis >= interval)
+  {
+    prevMillis = currentMillis;
+
+    // Send encoder data
+    Serial.write('{');
+    // Calculate Angles
+    for (byte i = 0; i < 2; i++)
+    {
+      angles[i] = (encTicks[i] * 2.0 * PI) / TICKS_PER_REV;
+      Serial.print(angles[i]);
+      Serial.write('|');
+    }
+
+    // Calucalte Velocites
+    for (byte i = 0; i < 2; i++)
+    {
+      velocity[i] = (angles[i] - prevAngles[i]) * REFRESH_RATE; // rad/s
+      prevAngles[i] = angles[i];
+      Serial.print(velocity[i]);
+      Serial.write('|');
+    }
+
+    // Calulate Yaw
+    // if (mpu.dmpGetCurrentFIFOPacket(packet)) {
+    //   if (IMU_YPR_MODE) {
+    //     mpu.dmpGetQuaternion(&q, packet);
+    //     mpu.dmpGetGravity(&gravity, &q);
+    //     mpu.dmpGetYawPitchRoll(ypr, &q, &gravity);
+    //     Serial.print(-ypr[0]);
+    //   } else {
+    //     mpu.getMotion6(&ax, &ay, &az, &gx, &gy, &gz);
+    //     Serial.print(-atan2(ay, az));
+    //   }
+    // }
+    mpu6050.update();
+    Serial.print(double(mpu6050.getAngleZ()) * DEG_TO_RAD);
+    Serial.print(F("}\n"));
+    Serial.flush(); // Ensure all data is sent before delay
+  }
+
+  // Parse PWM commands (non-blocking, can happen anytime)
   if (Serial.available() > 0)
   {
     data = Serial.readStringUntil('\n');
@@ -155,43 +201,4 @@ void loop()
       analogWrite(MotorR[0], abs(rightPWM));
     }
   }
-
-  // Send encoder data
-  Serial.write('{');
-  // Calculate Angles
-  for (byte i = 0; i < 2; i++)
-  {
-    angles[i] = (encTicks[i] * 2.0 * PI) / TICKS_PER_REV;
-    Serial.print(angles[i]);
-    Serial.write('|');
-  }
-
-  // Calucalte Velocites
-  for (byte i = 0; i < 2; i++)
-  {
-    velocity[i] = (angles[i] - prevAngles[i]) * REFRESH_RATE; // rad/s
-    prevAngles[i] = angles[i];
-    Serial.print(velocity[i]);
-    Serial.write('|');
-  }
-
-  // Calulate Yaw
-  // if (mpu.dmpGetCurrentFIFOPacket(packet)) {
-  //   if (IMU_YPR_MODE) {
-  //     mpu.dmpGetQuaternion(&q, packet);
-  //     mpu.dmpGetGravity(&gravity, &q);
-  //     mpu.dmpGetYawPitchRoll(ypr, &q, &gravity);
-  //     Serial.print(-ypr[0]);
-  //   } else {
-  //     mpu.getMotion6(&ax, &ay, &az, &gx, &gy, &gz);
-  //     Serial.print(-atan2(ay, az));
-  //   }
-  // }
-  mpu6050.update();
-  Serial.print(float(mpu6050.getAngleZ() * DEG_TO_RAD));
-  Serial.print(F("}\n"));
-  Serial.flush(); // Ensure all data is sent before delay
-
-  delay(1000 / REFRESH_RATE); // Adjust as needed
-  // delay(100); // Prevents serial buffer overflow
 }
