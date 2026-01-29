@@ -35,7 +35,7 @@ def generate_launch_description():
         description='Optional world file path (.sdf / .world). Empty = default empty world.'
     )
     rviz_config_arg = DeclareLaunchArgument(
-        'rviz_config',
+        'rviz_config_file',
         default_value=PathJoinSubstitution([
             desc_pkg,
             'config',
@@ -52,7 +52,7 @@ def generate_launch_description():
 
     # Configurations
     world = LaunchConfiguration('world')
-    rviz_config_file = LaunchConfiguration('rviz_config')
+    rviz_config_file = LaunchConfiguration('rviz_config_file')
     gui = LaunchConfiguration('gui')
 
     # Path to xacro file (using gz_bot.urdf.xacro for Gazebo simulation)
@@ -120,8 +120,8 @@ def generate_launch_description():
         ),
         launch_arguments={
             'use_sim_time': 'true',
-            'robot_model': 'rviz',
-            'rviz_config': rviz_config_file
+            'use_joint_state_publisher_gui': 'false',
+            'rviz_config_file': rviz_config_file
         }.items()
     )
 

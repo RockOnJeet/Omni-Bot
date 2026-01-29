@@ -52,9 +52,9 @@
   </xacro:imu_mpu6050>
 
   <!-- LiDAR mounted 0.235m above base_footprint -->
-  <xacro:ydlidar_g2 parent="base_footprint">
+  <!-- <xacro:ydlidar_g2 parent="base_footprint">
     <origin xyz="0 0 0.25" rpy="0 0 0" />
-  </xacro:ydlidar_g2>
+  </xacro:ydlidar_g2> -->
 
   <xacro:wheel_preset i="0" parent="base_link" />
   <xacro:wheel_preset i="1" parent="base_link" />

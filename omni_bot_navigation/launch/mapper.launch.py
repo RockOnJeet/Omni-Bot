@@ -5,8 +5,7 @@ from launch.actions import (
     IncludeLaunchDescription,
     TimerAction
 )
-from launch.conditions import IfCondition
-from launch.event_handlers import OnProcessStart
+from launch.conditions import IfCondition, UnlessCondition
 from launch.launch_description_sources import PythonLaunchDescriptionSource
 from launch.substitutions import (
     LaunchConfiguration,
@@ -29,6 +28,7 @@ def generate_launch_description():
     # Package shares
     desc_pkg = get_package_share_directory('omni_bot_description')
     sim_pkg = get_package_share_directory('omni_bot_sim')
+    real_pkg = get_package_share_directory('omni_bot_real')
     nav_pkg = get_package_share_directory('omni_bot_navigation')
 
     # Launch arguments: keep only optional 'world'. Everything else has sensible defaults.
@@ -88,6 +88,22 @@ def generate_launch_description():
         condition=IfCondition(use_sim_time)
     )
 
+    # Real robot visualization (if use_sim_time is false)
+    real_node = IncludeLaunchDescription(
+        PythonLaunchDescriptionSource(
+            PathJoinSubstitution([
+                real_pkg,
+                'launch',
+                'bot.launch.py'
+            ])
+        ),
+        launch_arguments={
+            'use_sim_time': use_sim_time,
+            'rviz_config_file': rviz_config_file
+        }.items(),
+        condition=UnlessCondition(use_sim_time)
+    )
+
     # SLAM node - delayed to start after Gazebo is ready
     slam_node = TimerAction(
         period=5.0,  # Wait 5 seconds for Gazebo to fully initialize
@@ -116,5 +132,6 @@ def generate_launch_description():
         params_arg,
         # Actions
         gz_node,
+        real_node,
         slam_node,
     ])

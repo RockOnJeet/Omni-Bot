@@ -37,9 +37,9 @@ def generate_launch_description():
         description='Whether to start joint_state_publisher_gui'
     )
 
-    use_rviz_path = LaunchConfiguration('use_rviz_path')
+    rviz_config_file = LaunchConfiguration('rviz_config_file')
     path_arg = DeclareLaunchArgument(
-        name='use_rviz_path',
+        name='rviz_config_file',
         default_value=os.path.join(
             path,
             'config',
@@ -55,7 +55,7 @@ def generate_launch_description():
         executable='rviz2',
         name='rviz2',
         output='screen',
-        arguments=['-d', use_rviz_path],
+        arguments=['-d', rviz_config_file],
         condition=IfCondition(use_rviz)
     )
 
