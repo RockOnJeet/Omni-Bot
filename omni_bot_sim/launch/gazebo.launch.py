@@ -159,12 +159,25 @@ def generate_launch_description():
         output='screen'
     )
 
+    tf2_lidar_broadcaster = Node(
+        package='tf2_ros',
+        executable='static_transform_publisher',
+        name='tf2_lidar_broadcaster',
+        # Origin matches URDF: parent=base_footprint, xyz="0 0 0.25"
+        # Source: src/omni_bot_description/description/gz_bot.urdf.xacro line 60
+        arguments=['0', '0', '0.25', '0', '0',
+                   '0', 'base_footprint', 'lidar_link'],
+        parameters=[{'use_sim_time': True}],
+        output='screen'
+    )
+
     return LaunchDescription([
         # Arguments
         world_arg,
         rviz_config_arg,
         gui_arg,
         # Actions
+        tf2_lidar_broadcaster,
         gz_sim_launch,
         spawn_entity,
         ros_gz_bridge,
