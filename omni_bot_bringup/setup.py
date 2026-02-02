@@ -1,6 +1,6 @@
 from setuptools import find_packages, setup
 
-package_name = 'omni_bot_kinematics'
+package_name = 'omni_bot_bringup'
 
 setup(
     name=package_name,
@@ -10,12 +10,12 @@ setup(
         ('share/ament_index/resource_index/packages',
             ['resource/' + package_name]),
         ('share/' + package_name, ['package.xml']),
-        ('share/' + package_name + '/launch', ['launch/kinematics_test.launch.py']),
+        ('share/' + package_name + '/launch', ['launch/bringup.launch.py']),
     ],
     install_requires=['setuptools'],
     zip_safe=True,
-    maintainer='soumyajit',
-    maintainer_email='soumyajit@vssut.ac.in',
+    maintainer='rs',
+    maintainer_email='vssut_robotics@vssut.ac.in',
     description='TODO: Package description',
     license='TODO: License declaration',
     extras_require={
@@ -25,7 +25,6 @@ setup(
     },
     entry_points={
         'console_scripts': [
-            'kinematics_node = omni_bot_kinematics.kinematics_node:main',
         ],
     },
 )
