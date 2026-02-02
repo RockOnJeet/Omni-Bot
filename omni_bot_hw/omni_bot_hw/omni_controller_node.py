@@ -1,11 +1,9 @@
 import rclpy
 from rclpy.node import Node
-# from nav_msgs.msg import Odometry
-from geometry_msgs.msg import Twist
-# from tf2_ros import TransformBroadcaster, TransformStamped
-# from tf_transformations import quaternion_from_euler as quat_from_euler
+
 from sensor_msgs.msg import JointState
 from sensor_msgs.msg import Imu
+from std_msgs.msg import Float64MultiArray
 
 import time
 import math
@@ -61,6 +59,14 @@ class OmniControllerNode(Node):
         # Initialize IMU Message (we'll publish yaw only)
         self.imu_msg = Imu()
 
+        # Initialize motor commands subscriber
+        self.wheel_cmd_sub = self.create_subscription(
+            Float64MultiArray,
+            '/omni_controller/commands',
+            self.wheel_cmd_callback,
+            10
+        )
+
         # Initialize Serial Port
         try:
             self.serial = serial.Serial(self.port, self.baudrate, timeout=1)
@@ -95,8 +101,8 @@ class OmniControllerNode(Node):
                 if data.startswith('{') and data.endswith('}'):
                     data = data[1:-1].split('|')
                     if len(data) == 5:  # 4 if yaw is not published
-                        self.enc_ang = [float(data[0]), float(data[1])]
-                        self.enc_ang_vel = [float(data[2]), float(data[3])]
+                        self.enc_ang = [float(data[0]), -float(data[1])]
+                        self.enc_ang_vel = [float(data[2]), -float(data[3])]
                         self.yaw = float(data[4])
                     else:
                         self.get_logger().warn(f'Invalid format: {data}')
@@ -125,6 +131,53 @@ class OmniControllerNode(Node):
         self.imu_msg.orientation.z = math.sin(half_yaw)
         self.imu_msg.orientation.w = math.cos(half_yaw)
         self.imu_pub.publish(self.imu_msg)
+    
+    def wheel_cmd_callback(self, msg):
+        """
+        Callback for wheel command messages.
+
+        Args:
+            msg (Float64MultiArray): Message containing wheel velocities [front, left, right] in rad/s
+        """
+        if len(msg.data) != 3:
+            self.get_logger().warn(
+                f'Invalid wheel command length: {len(msg.data)}')
+            return
+
+        front_vel = msg.data[0]
+        left_vel = msg.data[1]
+        right_vel = msg.data[2]
+
+        # Convert wheel velocities to PWM values
+        pwm_front = -self.velocity_to_pwm(front_vel)
+        pwm_left = -self.velocity_to_pwm(left_vel)
+        pwm_right = -self.velocity_to_pwm(right_vel)
+
+        # Send PWM commands to the controller
+        command_str = f'[{pwm_front}|{pwm_left}|{pwm_right}]'
+        # self.get_logger().info(f'Sending command: {command_str}')
+
+        try:
+            self.serial.write(command_str.encode())
+        except serial.SerialException as e:
+            self.get_logger().error(f'Serial write error: {e}')
+    
+    def velocity_to_pwm(self, velocity):
+        """
+        Convert wheel velocity (rad/s) to PWM value.
+
+        Args:
+            velocity (float): Wheel velocity in rad/s
+
+        Returns:
+            float: Corresponding PWM value
+        """
+        max_velocity = 8.0  # max velocity in rad/s
+        max_pwm = 250.0      # max PWM value
+
+        pwm = (velocity / max_velocity) * max_pwm
+        pwm = int(max(-max_pwm, min(max_pwm, pwm)))  # Clamp to [-max_pwm, max_pwm]
+        return pwm
 
     def destroy_node(self):
         self.serial.close()

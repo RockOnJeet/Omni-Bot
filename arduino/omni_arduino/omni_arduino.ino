@@ -19,8 +19,8 @@ MPU6050 mpu6050(Wire);
 // int16_t gx, gy, gz;
 
 // Pins
-const byte EncoderX[2] = {2, 4}; // X encoder pins
-const byte EncoderY[2] = {3, 5}; // Y encoder pins
+const byte EncoderX[2] = {3, 5}; // X encoder pins
+const byte EncoderY[2] = {2, 4}; // Y encoder pins
 const byte MotorF[2] = {9, 6};   // Front motor pins (PWM, DIR)
 const byte MotorL[2] = {10, 7};  // Left motor pins (PWM, DIR)
 const byte MotorR[2] = {11, 8};  // Right motor pins (PWM, DIR)
@@ -167,7 +167,10 @@ void loop()
     //   }
     // }
     mpu6050.update();
-    Serial.print(double(mpu6050.getAngleZ()) * DEG_TO_RAD);
+    float yaw = mpu6050.getAngleZ();
+    if (yaw == 0b0)
+      yaw = 0.0;
+    Serial.print(yaw * DEG_TO_RAD);
     Serial.print(F("}\n"));
     Serial.flush(); // Ensure all data is sent before delay
   }
@@ -191,13 +194,14 @@ void loop()
       int rightPWM = data.substring(data.lastIndexOf("|") + 1).toInt();
 
       // Set motor direction and speed
-      digitalWrite(MotorF[1], fwdPWM > 0 ? HIGH : LOW);
+      // Set motor direction and speed
+      digitalWrite(MotorR[1], fwdPWM > 0 ? HIGH : LOW);
       analogWrite(MotorF[0], abs(fwdPWM));
 
       digitalWrite(MotorL[1], leftPWM > 0 ? HIGH : LOW);
       analogWrite(MotorL[0], abs(leftPWM));
 
-      digitalWrite(MotorR[1], rightPWM > 0 ? HIGH : LOW);
+      digitalWrite(MotorF[1], rightPWM > 0 ? HIGH : LOW);
       analogWrite(MotorR[0], abs(rightPWM));
     }
   }
