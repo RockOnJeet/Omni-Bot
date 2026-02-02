@@ -20,7 +20,7 @@ def generate_launch_description():
             desc_pkg,
             'config',
             'rviz',
-            'gz_view.rviz'
+            'odom_view.rviz'
         ])
     )
     rviz_node = IncludeLaunchDescription(
@@ -33,7 +33,6 @@ def generate_launch_description():
         ),
         launch_arguments={
             'use_sim_time': 'false',
-            # 'robot_model': 'rviz'
             'use_joint_state_publisher_gui': 'false',
             'rviz_config_file': rviz_config_file
         }.items()

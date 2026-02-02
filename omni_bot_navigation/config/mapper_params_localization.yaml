@@ -15,7 +15,7 @@ slam_toolbox:
     mode: localization
 
     # if you'd like to start localizing on bringup in a map and pose
-    map_file_name: /home/soumyajit/ROS/Omni-Bot/src/omni_bot_navigation/maps/elearn/elearn
+    map_file_name: /home/soumyajit/ROS/Omni-Bot/src/Docker-Jazzy/omni_bot_navigation/maps/custom/custom
     map_start_pose: [0.0, 0.0, 0.0]
 
     debug_logging: false

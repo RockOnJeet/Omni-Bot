@@ -55,6 +55,7 @@ def generate_launch_description():
         executable='rviz2',
         name='rviz2',
         output='screen',
+        parameters=[{'use_sim_time': use_sim_time}],
         arguments=['-d', rviz_config_file],
         condition=IfCondition(use_rviz)
     )
@@ -84,6 +85,7 @@ def generate_launch_description():
         executable='joint_state_publisher_gui',
         name='joint_state_publisher',
         output='screen',
+        parameters=[{'use_sim_time': use_sim_time}],
         condition=IfCondition(use_jsp)
     )
 

@@ -1,137 +1,112 @@
 import os
 from launch import LaunchDescription
-from launch.actions import (
-    DeclareLaunchArgument,
-    IncludeLaunchDescription,
-    TimerAction
-)
-from launch.conditions import IfCondition, UnlessCondition
+from launch.actions import DeclareLaunchArgument
+from launch.substitutions import LaunchConfiguration, PathJoinSubstitution
 from launch.launch_description_sources import PythonLaunchDescriptionSource
-from launch.substitutions import (
-    LaunchConfiguration,
-    PathJoinSubstitution
-)
+from launch.actions import IncludeLaunchDescription, LogInfo
+from launch.conditions import IfCondition, UnlessCondition
 from ament_index_python.packages import get_package_share_directory
 
 
 def generate_launch_description():
-    """Gazebo (Ignition / gz sim) launch for omni bot.
+    """Launch file for the mapper node in omni_bot_navigation package."""
 
-    Best-practice updates:
-      * Uses ros_gz_sim (gz sim) instead of gazebo_ros (Classic not present).
-      * Always uses sim time (gz = sim time true).
-      * Minimal arguments: only optional 'world' path. Defaults to empty world.
-      * Spawns robot via ros_gz_sim `create` using Xacro-generated URDF directly.
-      * No dependency on ROS topics for spawning - uses -file flag with temp URDF.
-    """
-
-    # Package shares
-    desc_pkg = get_package_share_directory('omni_bot_description')
-    sim_pkg = get_package_share_directory('omni_bot_sim')
-    real_pkg = get_package_share_directory('omni_bot_real')
+    # Package share directory
     nav_pkg = get_package_share_directory('omni_bot_navigation')
+    slam_pkg = get_package_share_directory('slam_toolbox')
 
-    # Launch arguments: keep only optional 'world'. Everything else has sensible defaults.
-    world_arg = DeclareLaunchArgument(
-        'world', default_value=PathJoinSubstitution([
-            sim_pkg, 'worlds', 'custom.sdf'
-        ]),
-        description='Optional world file path (.sdf / .world). Empty = default custom world.'
-    )
-
-    rviz_config_arg = DeclareLaunchArgument(
-        'rviz_config',
-        default_value=PathJoinSubstitution([
-            desc_pkg,
-            'config',
-            'rviz',
-            'map_view.rviz'
-        ])
-    )
-
+    # Launch arguments
+    use_sim_time = LaunchConfiguration('use_sim_time')
     time_arg = DeclareLaunchArgument(
         name='use_sim_time',
-        default_value='true',
+        default_value='false',
         description='Use simulation/Gazebo clock'
     )
 
-    params_arg = DeclareLaunchArgument(
-        name='use_params_file',
+    rviz_config_file = LaunchConfiguration('rviz_config_file')
+    path_arg = DeclareLaunchArgument(
+        name='rviz_config_file',
         default_value=os.path.join(
             nav_pkg,
             'config',
-            'mapper_params_online_async.yaml'
+            'rviz',
+            'map_view.rviz'
         ),
-        description='Path to the parameters file'
+        description='Path to the RViz configuration file'
     )
 
-    # Configurations
-    use_sim_time = LaunchConfiguration('use_sim_time')
-    world_file = LaunchConfiguration('world')
-    rviz_config_file = LaunchConfiguration('rviz_config')
-    use_params_file = LaunchConfiguration('use_params_file')
+    # Log sim time setting
+    sim_time_info = LogInfo(
+        msg=['NOTE: Sim time set to ', use_sim_time]
+    )
 
-    # GZ visualization (only launch if use_sim_time is true)
-    gz_node = IncludeLaunchDescription(
+    # Online Async Mapper Launch
+    slam_params_file = PathJoinSubstitution(
+        [nav_pkg, 'config', 'mapper_params_online_async.yaml']
+    )
+    mapper_launch = IncludeLaunchDescription(
         PythonLaunchDescriptionSource(
-            PathJoinSubstitution([
-                sim_pkg,
+            os.path.join(
+                slam_pkg,
                 'launch',
-                'gazebo.launch.py'
-            ])
+                'online_async_launch.py'
+            )
         ),
         launch_arguments={
-            'world': world_file,
-            'rviz_config': rviz_config_file,
-            'gui': 'false'
+            'use_sim_time': use_sim_time,
+            'slam_params_file': slam_params_file
+        }.items()
+    )
+
+    # Gazebo Launch (if use_sim_time:=true)
+    custom_world = os.path.join(
+        get_package_share_directory('omni_bot_sim'),
+        'worlds',
+        'custom.sdf'
+    )
+    gazebo_launch = IncludeLaunchDescription(
+        PythonLaunchDescriptionSource(
+            os.path.join(
+                get_package_share_directory('omni_bot_sim'),
+                'launch',
+                'gazebo.launch.py'
+            )
+        ),
+        launch_arguments={
+            'world': custom_world,
+            'gui': 'false',
+            'rviz_config_file': rviz_config_file
         }.items(),
         condition=IfCondition(use_sim_time)
     )
 
-    # Real robot visualization (if use_sim_time is false)
-    real_node = IncludeLaunchDescription(
+    # HW Launch (if use_sim_time:=false)
+    hw_launch = IncludeLaunchDescription(
         PythonLaunchDescriptionSource(
-            PathJoinSubstitution([
-                real_pkg,
+            os.path.join(
+                get_package_share_directory('omni_bot_description'),
                 'launch',
-                'bot.launch.py'
-            ])
+                'urdf.launch.py'
+            )
         ),
         launch_arguments={
-            'use_sim_time': use_sim_time,
+            'use_sim_time': 'false',
+            'use_joint_state_publisher_gui': 'false',
             'rviz_config_file': rviz_config_file
         }.items(),
         condition=UnlessCondition(use_sim_time)
     )
 
-    # SLAM node - delayed to start after Gazebo is ready
-    slam_node = TimerAction(
-        period=5.0,  # Wait 5 seconds for Gazebo to fully initialize
-        actions=[
-            IncludeLaunchDescription(
-                PythonLaunchDescriptionSource(
-                    PathJoinSubstitution([
-                        get_package_share_directory('slam_toolbox'),
-                        'launch',
-                        'online_async_launch.py'
-                    ])
-                ),
-                launch_arguments={
-                    'use_sim_time': use_sim_time,
-                    'slam_params_file': use_params_file,
-                }.items()
-            )
-        ]
-    )
-
+    # Launch!
     return LaunchDescription([
-        # Arguments
+        # Args
         time_arg,
-        world_arg,
-        rviz_config_arg,
-        params_arg,
-        # Actions
-        gz_node,
-        real_node,
-        slam_node,
+        path_arg,
+        # Log Info
+        sim_time_info,
+        # Launches
+        gazebo_launch,
+        hw_launch,
+        # Launch SLAM at end
+        mapper_launch
     ])

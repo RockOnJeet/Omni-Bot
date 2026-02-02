@@ -1,20 +1,13 @@
 <robot xmlns:xacro="http://www.ros.org/wiki/xacro">
-  <!-- Gazebo System Plugins and Sensor Configuration
-       CRITICAL: Define system plugins here for all Gazebo features (sensors, control, physics)
-       Reference: https://github.com/gazebosim/gz-sim
-  -->
-
   <gazebo>
-    <!-- CRITICAL: Gazebo Sensors System Plugin
-         Without this plugin, sensors (LiDAR, IMU, cameras) will NOT publish topics.
-         This plugin must be included either here (URDF/Xacro) or in the world file (but not both).
-    -->
+    <!-- Sensors System Plugin (required for IMU, LIDAR, etc.) -->
     <plugin filename="gz-sim-sensors-system" name="gz::sim::systems::Sensors">
       <render_engine>ogre2</render_engine>
     </plugin>
 
     <!-- Joint States Publisher (for encoders and other passive joints) -->
-    <plugin filename="gz-sim-joint-state-publisher-system" name="gz::sim::systems::JointStatePublisher">
+    <plugin filename="gz-sim-joint-state-publisher-system"
+      name="gz::sim::systems::JointStatePublisher">
       <topic>joint_states</topic>
       <joint_name>encoder_joint_X</joint_name>
       <joint_name>encoder_joint_Y</joint_name>
@@ -48,9 +41,7 @@
     </sensor>
   </gazebo>
 
-  <!-- Gazebo LiDAR Plugin Configuration for YDLiDAR G2 -->
-  <!-- CRITICAL: Gazebo plugin for GPU LiDAR -->
-  <!-- Reference: YDLidar_G2.md (Factory Fresh Plug-and-Play Specifications) -->
+  <!-- YDLiDAR G2 360° 2D LiDAR Sensor attached to lidar_link -->
   <gazebo reference="lidar_link">
     <material>Gazebo/Black</material>
 
@@ -76,11 +67,7 @@
       <lidar>
         <scan>
           <horizontal>
-            <!-- YDLiDAR G2: 360° full rotation scanning -->
-            <!-- 1.0° resolution = 360 samples per complete rotation -->
-            <!-- Native sensor: ~0.36° angular resolution, 5000 samples/sec -->
             <samples>360</samples>
-            <!-- Full 360° field of view: -180° to +180° -->
             <min_angle>-3.14159</min_angle>
             <max_angle>3.14159</max_angle>
           </horizontal>
