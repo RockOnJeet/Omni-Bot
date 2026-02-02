@@ -8,7 +8,8 @@ from launch_ros.actions import Node
 from launch.substitutions import (
     LaunchConfiguration,
     PathJoinSubstitution,
-    TextSubstitution
+    TextSubstitution,
+    IfElseSubstitution,
 )
 from ament_index_python.packages import get_package_share_directory
 from ros_gz_bridge.actions import RosGzBridge
@@ -63,7 +64,6 @@ def generate_launch_description():
         xacro_file).toxml()  # type: ignore
 
     # Compose gz_args: run immediately (-r), verbosity 4, optional server-only (-s), and world path
-    from launch.substitutions import IfElseSubstitution
     gz_args = [
         TextSubstitution(text='-r -v4 '),
         IfElseSubstitution(gui, '', TextSubstitution(text='-s ')),
@@ -125,32 +125,6 @@ def generate_launch_description():
         }.items()
     )
 
-    # Kinematics node (cmd_vel -> wheel velocities)
-    base_controller_node = Node(
-        package='omni_bot_base',
-        executable='base_controller',
-        name='omni_bot_base_controller',
-        output='screen',
-        parameters=[{
-            'wheel_radius': 0.076,
-            'robot_radius': 0.4185,
-            'use_sim_time': True
-        }]
-    )
-
-    # Odometry node (encoder fusion, translation-only)
-    odometry_node = Node(
-        package='omni_bot_odometry',
-        executable='odometry_node',
-        name='omni_bot_odometry_node',
-        output='screen',
-        parameters=[{
-            'encoder_radius': 0.05,
-            'update_rate': 60.0,
-            'use_sim_time': True
-        }]
-    )
-
     omni_controller_spawner = Node(
         package='controller_manager',
         executable='spawner',
@@ -182,8 +156,6 @@ def generate_launch_description():
         spawn_entity,
         ros_gz_bridge,
         rviz_node,
-        base_controller_node,
-        odometry_node,
         # ros2_control spawners (after robot spawned)
         omni_controller_spawner
     ])
