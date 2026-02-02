@@ -20,17 +20,9 @@ class OmniControllerNode(Node):
         # Declare parameters
         self.declare_parameter('wheel_names', [
                                'wheel_joint_0', 'wheel_joint_1', 'wheel_joint_2'])   # Names of the wheels
-        # Radius of the wheels (m)
-        self.declare_parameter('wheel_radius', 0.07)
-        # Radius of the robot (m)
-        self.declare_parameter('robot_radius', 0.45)
         # Names of the encoders
         self.declare_parameter(
             'encoder_names', ['encoder_joint_X', 'encoder_joint_Y'])
-        # Radius of Encoder Wheel (m)
-        self.declare_parameter('encoder_radius', 0.05)
-        # Encoder resolution
-        self.declare_parameter('ticks_per_rev', 400)
         # Serial port
         self.declare_parameter('port', '/dev/ttyUSB0')
         # Baudrate
@@ -41,16 +33,8 @@ class OmniControllerNode(Node):
         # Get parameters
         self.wheel_names = self.get_parameter(
             'wheel_names').get_parameter_value().string_array_value
-        self.wheel_radius = self.get_parameter(
-            'wheel_radius').get_parameter_value().double_value
-        self.robot_radius = self.get_parameter(
-            'robot_radius').get_parameter_value().double_value
         self.encoder_names = self.get_parameter(
             'encoder_names').get_parameter_value().string_array_value
-        self.encoder_radius = self.get_parameter(
-            'encoder_radius').get_parameter_value().double_value
-        self.ticks_per_rev = self.get_parameter(
-            'ticks_per_rev').get_parameter_value().integer_value
         self.port = self.get_parameter(
             'port').get_parameter_value().string_value
         self.baudrate = self.get_parameter(
@@ -59,36 +43,20 @@ class OmniControllerNode(Node):
             'refresh_rate').get_parameter_value().integer_value
 
         self.timer = self.create_timer(
-            1.0/self.refresh_rate, self.update_odometry)
+            1.0/self.refresh_rate, self.publish_topics)
 
-        # self.odom_pub = self.create_publisher(Odometry, 'odom', 10)
         self.joint_pub = self.create_publisher(JointState, 'joint_states', 10)
         self.imu_pub = self.create_publisher(Imu, 'imu', 10)
-        # self.tf_broadcaster = TransformBroadcaster(self)
-        self.vel_sub = self.create_subscription(
-            Twist, 'cmd_vel', self.vel_callback, 10)
 
         # Initialize Variables
-        self.pose = [0.0]*3  # [x, y, theta]
+        self.yaw = 0.0
         self.wheel_pwm = [0]*3  # [pwm1, pwm2, pwm3]
         self.enc_ang = [0.0]*2  # [angX, angY]
         self.enc_ang_vel = [0.0]*2  # [ang_velX, ang_velY]
 
-        # Initialize Odom Message
-        # self.odom_msg = Odometry()
-        # self.odom_msg.header.frame_id = 'odom'
-        # self.odom_msg.child_frame_id = 'base_link'
-
-        # Initialize TF Message
-        # self.tf_msg = TransformStamped()
-        # self.tf_msg.header.frame_id = 'odom'
-        # self.tf_msg.child_frame_id = 'base_link'
-
         # Initialize Joint State
         self.joint_msg = JointState()
-        self.joint_msg.name = self.encoder_names + self.wheel_names
-        self.joint_msg.position = [0.0]*3
-        self.joint_msg.velocity = [0.0]*3
+        self.joint_msg.name = self.encoder_names + self.wheel_names # type: ignore
 
         # Initialize IMU Message (we'll publish yaw only)
         self.imu_msg = Imu()
@@ -127,9 +95,9 @@ class OmniControllerNode(Node):
                 if data.startswith('{') and data.endswith('}'):
                     data = data[1:-1].split('|')
                     if len(data) == 5:  # 4 if yaw is not published
-                        self.enc_ang = [float(data[0]), -float(data[1])]
-                        self.enc_ang_vel = [float(data[2]), -float(data[3])]
-                        self.pose[2] = float(data[4])
+                        self.enc_ang = [float(data[0]), float(data[1])]
+                        self.enc_ang_vel = [float(data[2]), float(data[3])]
+                        self.yaw = float(data[4])
                     else:
                         self.get_logger().warn(f'Invalid format: {data}')
                 elif data == '!':
@@ -140,56 +108,8 @@ class OmniControllerNode(Node):
                 self.get_logger().error(f'Serial error: {e}')
                 break
 
-    def vel_callback(self, msg):
-        # Convert Twist to Wheel Velocities (Forward Kinematics)
-        self.wheel_pwm[0] = (-self.robot_radius *
-                             msg.angular.z - 1.5 * msg.linear.y) / self.wheel_radius
-        self.wheel_pwm[1] = (-self.robot_radius * msg.angular.z + 0.5 *
-                             1.5 * msg.linear.y + math.sin(math.pi/3) * 1.5 * msg.linear.x) / self.wheel_radius
-        self.wheel_pwm[2] = (-self.robot_radius * msg.angular.z + 0.5 *
-                             1.5 * msg.linear.y - math.sin(math.pi/3) * 1.5 * msg.linear.x) / self.wheel_radius
-
-        # Map Recieved Velocities to PWM Range
-        for i in range(3):
-            # By default, Twist values for linear is 0.5 and angular is 1.0
-            # Map [-20, 20] to [-250, 250]
-            self.wheel_pwm[i] = int(self.wheel_pwm[i] * 250 / 20)
-
-            # Constrain PWM to [-250, 250]
-            self.wheel_pwm[i] = max(-250, min(250, self.wheel_pwm[i]))
-
-        # Send Wheel Velocities to Serial Port
-        self.serial.write(
-            f'[{self.wheel_pwm[0]}|{self.wheel_pwm[1]}|{self.wheel_pwm[2]}]'.encode())
-        self.serial.flush()
-        # self.get_logger().info(f'Wheel PWM: {self.wheel_pwm}')
-
-    def update_odometry(self):
-        # Update Odom using Wheel Velocities (Inverse Kinematics)
-        timestamp = self.get_clock().now().to_msg()
-        dt: float = 1 / self.refresh_rate
-
-        # Parse encoder values
-        self.pose[0] += (self.enc_ang_vel[1] * math.cos(self.pose[2]) + self.enc_ang_vel[0] * math.sin(self.pose[2])) * self.encoder_radius * dt
-        self.pose[1] += (-self.enc_ang_vel[0] * math.cos(self.pose[2]) + self.enc_ang_vel[1] * math.sin(self.pose[2])) * self.encoder_radius * dt
-        self.pose[2] += 0.0  # TODO: Gyro sets this
-
-        # DEBUG
-        # self._logger.info(f'Pose: {self.pose}')
-
-        # Publish Odom, TF, and Joint States
-        self.publish_topics(timestamp)
-
-    def publish_topics(self, current_time):
-        # Publish Odom
-        # self.odom_msg.header.stamp = current_time
-        # self.odom_msg.pose.pose.position.x = self.pose[0]
-        # self.odom_msg.pose.pose.position.y = self.pose[1]
-        # self.odom_msg.pose.pose.orientation.x = 0.0
-        # self.odom_msg.pose.pose.orientation.y = 0.0
-        # self.odom_msg.pose.pose.orientation.z = quat_from_euler(0.0, 0.0, self.pose[2])[2]
-        # self.odom_msg.pose.pose.orientation.w = quat_from_euler(0.0, 0.0, self.pose[2])[3]
-        # self.odom_pub.publish(self.odom_msg)
+    def publish_topics(self):
+        current_time = self.get_clock().now().to_msg()
 
         # Publish Joint States
         self.joint_msg.header.stamp = current_time
@@ -198,24 +118,13 @@ class OmniControllerNode(Node):
         self.joint_pub.publish(self.joint_msg)
 
         # Publish IMU with yaw-only orientation (roll=pitch=0)
-        yaw = self.pose[2]
-        half_yaw = yaw / 2.0
+        half_yaw = self.yaw / 2.0
         self.imu_msg.header.stamp = current_time
         self.imu_msg.orientation.x = 0.0
         self.imu_msg.orientation.y = 0.0
         self.imu_msg.orientation.z = math.sin(half_yaw)
         self.imu_msg.orientation.w = math.cos(half_yaw)
         self.imu_pub.publish(self.imu_msg)
-
-        # Publish TF
-        # self.tf_msg.header.stamp = current_time
-        # self.tf_msg.transform.translation.x = self.pose[0]
-        # self.tf_msg.transform.translation.y = self.pose[1]
-        # self.tf_msg.transform.rotation.x = 0.0
-        # self.tf_msg.transform.rotation.y = 0.0
-        # self.tf_msg.transform.rotation.z = quat_from_euler(0.0, 0.0, self.pose[2])[2]
-        # self.tf_msg.transform.rotation.w = quat_from_euler(0.0, 0.0, self.pose[2])[3]
-        # self.tf_broadcaster.sendTransform(self.tf_msg)
 
     def destroy_node(self):
         self.serial.close()
