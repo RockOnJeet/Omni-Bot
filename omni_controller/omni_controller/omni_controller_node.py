@@ -127,8 +127,8 @@ class OmniControllerNode(Node):
                 if data.startswith('{') and data.endswith('}'):
                     data = data[1:-1].split('|')
                     if len(data) == 5:  # 4 if yaw is not published
-                        self.enc_ang = [float(data[0]), float(data[1])]
-                        self.enc_ang_vel = [float(data[2]), float(data[3])]
+                        self.enc_ang = [float(data[0]), -float(data[1])]
+                        self.enc_ang_vel = [float(data[2]), -float(data[3])]
                         self.pose[2] = float(data[4])
                     else:
                         self.get_logger().warn(f'Invalid format: {data}')

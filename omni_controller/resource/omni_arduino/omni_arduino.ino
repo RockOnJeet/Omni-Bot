@@ -1,6 +1,6 @@
 // IMU
-#include <MPU6050_tockn.h>
 #include <Wire.h>
+#include <MPU6050_tockn.h>
 // #include <I2Cdev.h>
 // #include <MPU6050_6Axis_MotionApps20.h>
 
@@ -19,11 +19,12 @@ MPU6050 mpu6050(Wire);
 // int16_t gx, gy, gz;
 
 // Pins
-const byte EncoderX[2] = {2, 4}; // X encoder pins
-const byte EncoderY[2] = {3, 5}; // Y encoder pins
+const byte EncoderX[2] = {3, 5}; // X encoder pins
+const byte EncoderY[2] = {2, 4}; // Y encoder pins
 const byte MotorF[2] = {9, 6};   // Front motor pins (PWM, DIR)
 const byte MotorL[2] = {10, 7};  // Left motor pins (PWM, DIR)
 const byte MotorR[2] = {11, 8};  // Right motor pins (PWM, DIR)
+// const byte PwrPin[2] = {A0, A1}; // Power monitor pins (Vbatt, Icurrent)
 
 // Variables
 volatile long encTicks[2];
@@ -103,6 +104,12 @@ void setup()
     pinMode(EncoderY[i], INPUT_PULLUP);
   }
 
+  // Set up power monitor pins
+  // for (byte i = 0; i < 2; i++)
+  // {
+  //   pinMode(PwrPin[i], INPUT);
+  // }
+
   // Attach interrupts
   attachInterrupt(digitalPinToInterrupt(EncoderX[0]), leftEncoderISR, RISING);
   attachInterrupt(digitalPinToInterrupt(EncoderY[0]), rightEncoderISR, RISING);
@@ -168,6 +175,19 @@ void loop()
     // }
     mpu6050.update();
     Serial.print(double(mpu6050.getAngleZ()) * DEG_TO_RAD);
+    // Serial.print(0.0); // Placeholder for Yaw
+    // Serial.write('|');
+
+    // Read Power Monitor
+    // int rawV = analogRead(PwrPin[0]);
+    // int rawI = analogRead(PwrPin[1]);
+    // Assuming a 10:1 voltage divider for battery voltage sensing
+    // float vBatt = rawV * (5.0 / 1023.0) * 10.0;
+    // Assuming a 1:1 voltage divider for current sensing
+    // float vCurrent = rawI * (5.0 / 1023.0) * 2.5;
+    // Serial.print(vBatt);
+    // Serial.write('|');
+    // Serial.print(vCurrent);
     Serial.print(F("}\n"));
     Serial.flush(); // Ensure all data is sent before delay
   }
