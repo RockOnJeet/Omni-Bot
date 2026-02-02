@@ -1,7 +1,7 @@
 #!/bin/bash
 set -e
 
-BASE=~/Omni-Bot/src
+BASE=$(pwd)
 
 git submodule update --init --recursive
 
@@ -11,7 +11,7 @@ apply_patch () {
     local patch="$BASE/$name.local.patch"
 
     if [ ! -f "$patch" ]; then
-        echo "$name: no patch, skipping"
+        echo "$name: no patch at $patch, skipping"
         return
     fi
 
