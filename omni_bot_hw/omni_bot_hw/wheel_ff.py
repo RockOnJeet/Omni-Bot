@@ -28,9 +28,9 @@ OVERCURRENT_CRITICAL = 12.0   # aggressive clamp
 
 # ===================== Feedforward Tuning =====================
 
-WHEEL_OMEGA_KNEE = 6.0
-WHEEL_LOWSPEED_GAIN = 0.85
-WHEEL_LOAD_GAIN = 0.08
+WHEEL_OMEGA_KNEE = 6.0  # Speed below which low-speed nonlinearity is significant (rad/s)
+WHEEL_K_LOWSPEED = 0.85 # Feedforward scaling factor to compensate for low-speed nonlinearity
+WHEEL_LOAD_GAIN = 0.08  # Additional feedforward gain per amp of load current above no-load
 
 # ===================== Per-Wheel Calibration =====================
 
@@ -75,71 +75,26 @@ def sign(x):
 
 # ===================== Public API =====================
 
+def omega_to_pwm(wheel_id, omega):
+    # Checks
+    if wheel_id not in WHEEL_DB:
+        raise ValueError(f'Invalid wheel ID: {wheel_id}')
+    omega = clamp(omega, OMEGA_MIN, OMEGA_MAX)
 
-def wheel_pwm_from_omega(wheel_id: int, omega_des: float) -> int:
-    """
-    Compute PWM in [-255, 255] with feedforward + safety derating.
-    """
+    # Implement scaling to slowest wheel
+    pwm = WHEEL_S[wheel_id] * omega
 
-    if wheel_id not in (1, 2, 3):
-        return 0
+    # Linear scaling to PWM
+    if abs(omega) < WHEEL_OMEGA_KNEE:
+        pwm *= WHEEL_K_LOWSPEED     # Scale against low-speed nonlinearity
+    pwm *= WHEEL_K[wheel_id]
 
-    # Enforce angular velocity limits
-    omega_cmd = clamp(omega_des, OMEGA_MIN, OMEGA_MAX)
-
-    k_norm = WHEEL_K[wheel_id] * WHEEL_S[wheel_id]
-    deadband = float(WHEEL_DB[wheel_id])
-
-    s = sign(omega_cmd)
-    absw = abs(omega_cmd)
-
-    # Piecewise slope
-    k_eff = k_norm
-    if absw < WHEEL_OMEGA_KNEE:
-        k_eff *= WHEEL_LOWSPEED_GAIN
-
-    # Inverse feedforward
-    pwm = 0.0
-    if absw > 1e-4:
-        pwm = absw / k_eff
-
-    # Deadband + breakaway
-    pwm += deadband
-
-    # Battery voltage compensation + derating
-    v = clamp(_batt_voltage, LIPO_4S_V_MIN, LIPO_4S_V_FULL)
-    volt_mult = LIPO_4S_V_NOMINAL / v
-
-    # Voltage safety derate
-    if _batt_voltage < LOW_VOLTAGE_CUTOFF:
-        # Linear derate down to CRITICAL_VOLTAGE
-        derate_v = clamp(
-            (_batt_voltage - CRITICAL_VOLTAGE) /
-            (LOW_VOLTAGE_CUTOFF - CRITICAL_VOLTAGE),
-            0.0, 1.0
-        )
-        volt_mult *= derate_v
-
-    pwm *= volt_mult
-
-    # Load compensation (from measured current)
-    i_norm = _batt_current / MOTOR_NOLOAD_CURRENT_A
-    load_mult = 1.0 + WHEEL_LOAD_GAIN * clamp(i_norm, 0.0, 3.0)
-
-    # Current safety derate
-    if _batt_current > OVERCURRENT_WARN:
-        derate_i = clamp(
-            (OVERCURRENT_CRITICAL - _batt_current) /
-            (OVERCURRENT_CRITICAL - OVERCURRENT_WARN),
-            0.0, 1.0
-        )
-        load_mult *= derate_i
-
-    pwm *= load_mult
-
-    pwm *= s
-
-    # Final clamp
+    # Deadband compensation (PWM units)
+    if abs(omega) > 0.0:
+        pwm += sign(omega) * WHEEL_DB[wheel_id]
+    
+    # Clamp to max PWM
     pwm = clamp(pwm, -PWM_MAX, PWM_MAX)
 
-    return int(round(pwm))
+    return int(pwm)
+

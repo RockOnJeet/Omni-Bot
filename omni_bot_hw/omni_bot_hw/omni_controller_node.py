@@ -11,7 +11,7 @@ import serial
 import threading
 
 # Many constant definitions moved to wheel_ff.py
-from wheel_ff import wheel_pwm_from_omega
+from wheel_ff import omega_to_pwm
 
 
 class OmniControllerNode(Node):
@@ -152,9 +152,9 @@ class OmniControllerNode(Node):
         right_vel = msg.data[2]
 
         # Convert wheel velocities to PWM values
-        pwm_front = -wheel_pwm_from_omega(1, front_vel)
-        pwm_left = -wheel_pwm_from_omega(2, left_vel)
-        pwm_right = -wheel_pwm_from_omega(3, right_vel)
+        pwm_front = -omega_to_pwm(1, front_vel)
+        pwm_left = -omega_to_pwm(2, left_vel)
+        pwm_right = -omega_to_pwm(3, right_vel)
 
         # Send PWM commands to the controller
         command_str = f'[{pwm_front}|{pwm_left}|{pwm_right}]'
