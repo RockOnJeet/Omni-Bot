@@ -29,6 +29,7 @@ def generate_launch_description():
         parameters=[{
             'wheel_radius': 0.076,
             'robot_radius': 0.4185,
+            'max_wheel_velocity': 28.0,
             'use_sim_time': use_sim_time
         }]
     )

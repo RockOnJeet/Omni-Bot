@@ -11,7 +11,7 @@ import serial
 import threading
 
 # Many constant definitions moved to wheel_ff.py
-from wheel_ff import omega_to_pwm
+from .wheel_ff import omega_to_pwm
 
 
 class OmniControllerNode(Node):
@@ -158,7 +158,7 @@ class OmniControllerNode(Node):
 
         # Send PWM commands to the controller
         command_str = f'[{pwm_front}|{pwm_left}|{pwm_right}]'
-        # self.get_logger().info(f'Sending command: {command_str}')
+        self.get_logger().info(f'Sending command: {command_str}')
 
         try:
             self.serial.write(command_str.encode())

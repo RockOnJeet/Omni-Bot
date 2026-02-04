@@ -29,7 +29,7 @@ OVERCURRENT_CRITICAL = 12.0   # aggressive clamp
 # ===================== Feedforward Tuning =====================
 
 WHEEL_OMEGA_KNEE = 6.0  # Speed below which low-speed nonlinearity is significant (rad/s)
-WHEEL_K_LOWSPEED = 0.85 # Feedforward scaling factor to compensate for low-speed nonlinearity
+WHEEL_K_LOWSPEED = 1.5 # Feedforward scaling factor to compensate for low-speed nonlinearity
 WHEEL_LOAD_GAIN = 0.08  # Additional feedforward gain per amp of load current above no-load
 
 # ===================== Per-Wheel Calibration =====================
@@ -44,8 +44,8 @@ WHEEL_K = {
 
 WHEEL_S = {
     1: 1.0,
-    2: 0.7685374975821694,
-    3: 0.9632434528712791,
+    2: 0.8685374975821694,
+    3: 1.0,
 }
 
 # ===================== Runtime Inputs =====================
@@ -82,16 +82,14 @@ def omega_to_pwm(wheel_id, omega):
     omega = clamp(omega, OMEGA_MIN, OMEGA_MAX)
 
     # Implement scaling to slowest wheel
-    pwm = WHEEL_S[wheel_id] * omega
+    omega = WHEEL_S[wheel_id] * omega
 
     # Linear scaling to PWM
-    if abs(omega) < WHEEL_OMEGA_KNEE:
-        pwm *= WHEEL_K_LOWSPEED     # Scale against low-speed nonlinearity
-    pwm *= WHEEL_K[wheel_id]
+    pwm = omega / OMEGA_MAX * PWM_MAX
 
     # Deadband compensation (PWM units)
-    if abs(omega) > 0.0:
-        pwm += sign(omega) * WHEEL_DB[wheel_id]
+    if abs(pwm) < WHEEL_DB[wheel_id] and abs(omega) > 0.0:
+        pwm = WHEEL_DB[wheel_id]
     
     # Clamp to max PWM
     pwm = clamp(pwm, -PWM_MAX, PWM_MAX)
