@@ -10,6 +10,9 @@ import math
 import serial
 import threading
 
+# Many constant definitions moved to wheel_ff.py
+from wheel_ff import wheel_pwm_from_omega
+
 
 class OmniControllerNode(Node):
     def __init__(self):
@@ -54,7 +57,7 @@ class OmniControllerNode(Node):
 
         # Initialize Joint State
         self.joint_msg = JointState()
-        self.joint_msg.name = self.encoder_names + self.wheel_names # type: ignore
+        self.joint_msg.name = self.encoder_names + self.wheel_names  # type: ignore
 
         # Initialize IMU Message (we'll publish yaw only)
         self.imu_msg = Imu()
@@ -131,7 +134,7 @@ class OmniControllerNode(Node):
         self.imu_msg.orientation.z = math.sin(half_yaw)
         self.imu_msg.orientation.w = math.cos(half_yaw)
         self.imu_pub.publish(self.imu_msg)
-    
+
     def wheel_cmd_callback(self, msg):
         """
         Callback for wheel command messages.
@@ -149,9 +152,9 @@ class OmniControllerNode(Node):
         right_vel = msg.data[2]
 
         # Convert wheel velocities to PWM values
-        pwm_front = -self.velocity_to_pwm(front_vel)
-        pwm_left = -self.velocity_to_pwm(left_vel)
-        pwm_right = -self.velocity_to_pwm(right_vel)
+        pwm_front = -wheel_pwm_from_omega(1, front_vel)
+        pwm_left = -wheel_pwm_from_omega(2, left_vel)
+        pwm_right = -wheel_pwm_from_omega(3, right_vel)
 
         # Send PWM commands to the controller
         command_str = f'[{pwm_front}|{pwm_left}|{pwm_right}]'
@@ -161,23 +164,6 @@ class OmniControllerNode(Node):
             self.serial.write(command_str.encode())
         except serial.SerialException as e:
             self.get_logger().error(f'Serial write error: {e}')
-    
-    def velocity_to_pwm(self, velocity):
-        """
-        Convert wheel velocity (rad/s) to PWM value.
-
-        Args:
-            velocity (float): Wheel velocity in rad/s
-
-        Returns:
-            float: Corresponding PWM value
-        """
-        max_velocity = 8.0  # max velocity in rad/s
-        max_pwm = 250.0      # max PWM value
-
-        pwm = (velocity / max_velocity) * max_pwm
-        pwm = int(max(-max_pwm, min(max_pwm, pwm)))  # Clamp to [-max_pwm, max_pwm]
-        return pwm
 
     def destroy_node(self):
         self.serial.close()
