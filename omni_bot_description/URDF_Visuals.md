@@ -49,12 +49,12 @@ Optional parameters:
 Launch RViz2 with robot visualization and joint control GUI:
 
 ```bash
-ros2 launch omni_bot_description urdf.launch.py
+ros2 launch omni_bot_description rviz.launch.py
 ```
 
 Optional parameters:
 ```bash
-ros2 launch omni_bot_description urdf.launch.py robot_model:=rviz use_sim_time:=false
+ros2 launch omni_bot_description rviz.launch.py robot_model:=rviz use_sim_time:=false
 ```
 
 **Parameters:**

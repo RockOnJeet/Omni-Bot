@@ -1,10 +1,9 @@
 import os
 from launch import LaunchDescription
-from launch.actions import DeclareLaunchArgument
+from launch.actions import DeclareLaunchArgument, TimerAction
 from launch.substitutions import LaunchConfiguration, PathJoinSubstitution
 from launch.launch_description_sources import PythonLaunchDescriptionSource
 from launch.actions import IncludeLaunchDescription, LogInfo
-from launch.conditions import IfCondition, UnlessCondition
 from ament_index_python.packages import get_package_share_directory
 
 
@@ -58,43 +57,19 @@ def generate_launch_description():
         }.items()
     )
 
-    # Gazebo Launch (if use_sim_time:=true)
-    custom_world = os.path.join(
-        get_package_share_directory('omni_bot_sim'),
-        'worlds',
-        'custom.sdf'
-    )
-    gazebo_launch = IncludeLaunchDescription(
-        PythonLaunchDescriptionSource(
-            os.path.join(
-                get_package_share_directory('omni_bot_sim'),
-                'launch',
-                'gazebo.launch.py'
-            )
-        ),
-        launch_arguments={
-            'world': custom_world,
-            'gui': 'false',
-            'rviz_config_file': rviz_config_file
-        }.items(),
-        condition=IfCondition(use_sim_time)
-    )
-
-    # HW Launch (if use_sim_time:=false)
-    hw_launch = IncludeLaunchDescription(
+    # RViz Launch
+    rviz_launch = IncludeLaunchDescription(
         PythonLaunchDescriptionSource(
             os.path.join(
                 get_package_share_directory('omni_bot_description'),
                 'launch',
-                'urdf.launch.py'
+                'rviz.launch.py'
             )
         ),
         launch_arguments={
-            'use_sim_time': 'false',
-            'use_joint_state_publisher_gui': 'false',
+            'use_sim_time': use_sim_time,
             'rviz_config_file': rviz_config_file
-        }.items(),
-        condition=UnlessCondition(use_sim_time)
+        }.items()
     )
 
     # Launch!
@@ -105,8 +80,10 @@ def generate_launch_description():
         # Log Info
         sim_time_info,
         # Launches
-        gazebo_launch,
-        hw_launch,
-        # Launch SLAM at end
-        mapper_launch
+        rviz_launch,
+        # Launch SLAM at end (delayed by 10 seconds)
+        TimerAction(
+            period=10.0,
+            actions=[mapper_launch]
+        )
     ])

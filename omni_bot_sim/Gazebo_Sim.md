@@ -75,7 +75,7 @@ ros2 launch omni_bot_sim gazebo.launch.py world:=warehouse.sdf
    - Runs as standalone node (no composition)
 
 4. **RViz2 Visualization**:
-   - Launches via `omni_bot_description/launch/urdf.launch.py`
+   - Launches via `omni_bot_description/launch/rviz.launch.py`
    - Uses `robot_model:=rviz` variant for display
    - Sim time enabled for synchronization
 

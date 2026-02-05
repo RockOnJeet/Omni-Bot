@@ -29,17 +29,6 @@ def generate_launch_description():
         description='Optional world file path (.sdf / .world). Empty = default empty world.'
     )
 
-    rviz_config_file = LaunchConfiguration('rviz_config_file')
-    rviz_config_arg = DeclareLaunchArgument(
-        'rviz_config_file',
-        default_value=PathJoinSubstitution([
-            desc_pkg,
-            'config',
-            'rviz',
-            'odom_view.rviz'
-        ])
-    )
-
     gui = LaunchConfiguration('gui')
     gui_arg = DeclareLaunchArgument(
         'gui',
@@ -94,19 +83,18 @@ def generate_launch_description():
         # Note: extra_bridge_params can be added here if additional runtime params needed
     )
 
-    # RViz2 visualization & robot_state_publisher
-    rviz_node = IncludeLaunchDescription(
+    # Launch robot_state_publisher for ROS2_Control
+    rsp_launch = IncludeLaunchDescription(
         PythonLaunchDescriptionSource(
             PathJoinSubstitution([
                 desc_pkg,
                 'launch',
-                'urdf.launch.py'
+                'bot.launch.py'
             ])
         ),
         launch_arguments={
             'use_sim_time': 'true',
-            'use_joint_state_publisher_gui': 'false',
-            'rviz_config_file': rviz_config_file
+            'use_joint_state_publisher_gui': 'false'
         }.items()
     )
 
@@ -135,14 +123,13 @@ def generate_launch_description():
     return LaunchDescription([
         # Arguments
         world_arg,
-        rviz_config_arg,
         gui_arg,
         # Actions
         tf2_lidar_broadcaster,
         gz_sim_launch,
         spawn_entity,
         ros_gz_bridge,
-        rviz_node,
+        rsp_launch,
         # ros2_control spawners (after robot spawned)
         omni_controller_spawner
     ])

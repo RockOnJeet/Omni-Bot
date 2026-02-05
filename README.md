@@ -98,7 +98,7 @@
 
 1. **Visualize URDF in RViz2 Only:**
    ```bash
-   ros2 launch omni_bot_description urdf.launch.py
+   ros2 launch omni_bot_description rviz.launch.py
    ```
    - Opens RViz2 with the robot model
    - Includes joint state publisher GUI for manual joint control
