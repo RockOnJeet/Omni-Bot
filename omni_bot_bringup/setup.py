@@ -11,12 +11,16 @@ setup(
             ['resource/' + package_name]),
         ('share/' + package_name, ['package.xml']),
         ('share/' + package_name + '/launch', ['launch/bringup.launch.py']),
+        ('share/' + package_name + '/launch',
+         ['launch/odometry_test.launch.py']),
+        ('share/' + package_name + '/launch',
+         ['launch/kinematics_test.launch.py']),
     ],
     install_requires=['setuptools'],
     zip_safe=True,
-    maintainer='rs',
-    maintainer_email='vssut_robotics@vssut.ac.in',
-    description='TODO: Package description',
+    maintainer='soumyajit',
+    maintainer_email='soumyajit@vssut.ac.in',
+    description='This package intends to setup odometry and kinematics for omni_bot.',
     license='TODO: License declaration',
     extras_require={
         'test': [
@@ -25,6 +29,8 @@ setup(
     },
     entry_points={
         'console_scripts': [
+            'odometry_node = omni_bot_odometry.odometry_node:main',
+            'kinematics_node = omni_bot_kinematics.kinematics_node:main',
         ],
     },
 )
