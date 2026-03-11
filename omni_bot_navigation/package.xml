@@ -3,7 +3,8 @@
 <package format="3">
   <name>omni_bot_navigation</name>
   <version>0.0.0</version>
-  <description>TODO: Package description</description>
+  <description>This package intends to provide high-level mapping and navigation capabilities for
+    omni_bot.</description>
   <maintainer email="soumyajit@vssut.ac.in">soumyajit</maintainer>
   <license>TODO: License declaration</license>
 

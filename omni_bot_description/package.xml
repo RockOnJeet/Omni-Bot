@@ -3,8 +3,8 @@
 <package format="3">
   <name>omni_bot_description</name>
   <version>0.0.0</version>
-  <description>TODO: Package description</description>
-  <maintainer email="soumyajit@todo.todo">soumyajit</maintainer>
+  <description>This package contains the URDF description of omni_bot.</description>
+  <maintainer email="soumyajit@vssut.ac.in">soumyajit</maintainer>
   <license>TODO: License declaration</license>
 
   <buildtool_depend>ament_cmake</buildtool_depend>

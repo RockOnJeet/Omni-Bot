@@ -7,7 +7,6 @@ from launch_ros.actions import Node
 from launch.substitutions import LaunchConfiguration
 from launch.actions import DeclareLaunchArgument
 from launch import LaunchDescription
-from launch.conditions import IfCondition
 
 
 def generate_launch_description():
