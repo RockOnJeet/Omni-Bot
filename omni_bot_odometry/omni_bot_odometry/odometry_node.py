@@ -189,6 +189,8 @@ class OdometryNode(Node):
     def imu_callback(self, msg: Imu):
         """Cache latest IMU orientation and yaw for heading integration."""
         if not self._quaternion_valid(msg.orientation):
+            self.imu_has_orientation = False
+            self.get_logger().warn('Invalid IMU orientation received.')
             return
 
         self.imu_orientation = msg.orientation

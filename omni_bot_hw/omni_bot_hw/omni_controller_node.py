@@ -61,6 +61,7 @@ class OmniControllerNode(Node):
 
         # Initialize IMU Message (we'll publish yaw only)
         self.imu_msg = Imu()
+        self.imu_msg.header.frame_id = 'base_link'
 
         # Initialize motor commands subscriber
         self.wheel_cmd_sub = self.create_subscription(
@@ -107,6 +108,8 @@ class OmniControllerNode(Node):
                         self.enc_ang = [float(data[0]), -float(data[1])]
                         self.enc_ang_vel = [float(data[2]), -float(data[3])]
                         self.yaw = float(data[4])
+                        # Debug
+                        # self.get_logger().info(f'Encoders: {self.enc_ang}, Velocities: {self.enc_ang_vel}, Yaw: {self.yaw}')
                     else:
                         self.get_logger().warn(f'Invalid format: {data}')
                 elif data == '!':
@@ -158,7 +161,7 @@ class OmniControllerNode(Node):
 
         # Send PWM commands to the controller
         command_str = f'[{pwm_front}|{pwm_left}|{pwm_right}]'
-        self.get_logger().info(f'Sending command: {command_str}')
+        # self.get_logger().info(f'Sending command: {command_str}')
 
         try:
             self.serial.write(command_str.encode())
