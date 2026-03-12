@@ -22,7 +22,7 @@ def generate_launch_description():
 
     # Kinematics node (cmd_vel -> wheel velocities)
     kine_node = Node(
-        package='omni_bot_kinematics',
+        package='omni_bot_bringup',
         executable='kinematics_node',
         name='omni_bot_kinematics_node',
         output='screen',
@@ -36,7 +36,7 @@ def generate_launch_description():
 
     # Odometry node (encoder fusion, translation-only)
     odometry_node = Node(
-        package='omni_bot_odometry',
+        package='omni_bot_bringup',
         executable='odometry_node',
         name='omni_bot_odometry_node',
         output='screen',
