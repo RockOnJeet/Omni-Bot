@@ -11,6 +11,8 @@
 
   <xacro:property name="wheel_radius" value="${plate_radius + roller_radius}" />
   <xacro:property name="encoder_radius" value="0.05" />
+  <xacro:property name="wheel_damping" value="0.45" />
+  <xacro:property name="wheel_friction" value="1e-4" />
 
   <!--      Wheel macro       -->
   <xacro:macro name="wheel" params="i parent">
@@ -24,7 +26,7 @@
       <child link="wheel_${i}" />
       <origin xyz="${x} ${y} 0" rpy="0 ${pi/2} ${angle}" />
       <axis xyz="0 0 1" />
-      <dynamics damping="25e-4" friction="1e-4" />
+      <dynamics damping="${wheel_damping}" friction="${wheel_friction}" />
     </joint>
 
     <link name="wheel_${i}">
@@ -57,7 +59,8 @@
       <visual>
         <origin xyz="0 0 0" rpy="${pi/2} 0 0" />
         <geometry>
-          <mesh filename="package://omni_bot_description/description/stl/omni_wheel_plate.stl" scale="${scale} ${scale} ${scale}" />
+          <mesh filename="package://omni_bot_description/description/stl/omni_wheel_plate.stl"
+            scale="${scale} ${scale} ${scale}" />
           <!-- <cylinder radius="${plate_radius * scale}" length="${plate_gap/2}"/> -->
         </geometry>
         <material name="gray">
@@ -104,7 +107,8 @@
       <visual>
         <origin xyz="0 0 0" rpy="0 ${pi/2} 0" />
         <geometry>
-          <mesh filename="package://omni_bot_description/description/stl/omni_wheel_roller.stl" scale="${scale} ${scale} ${scale}" />
+          <mesh filename="package://omni_bot_description/description/stl/omni_wheel_roller.stl"
+            scale="${scale} ${scale} ${scale}" />
         </geometry>
         <material name="black">
           <color rgba="0.1 0.1 0.1 1.0" />
@@ -201,7 +205,8 @@
       <visual>
         <origin xyz="0.0 0.0 0.0" rpy="${pi/2} 0.0 0.0" />
         <geometry>
-          <mesh filename="package://omni_bot_description/description/stl/omni_wheel_152mm.stl" scale="${encoder_scale} ${encoder_scale} ${encoder_scale}" />
+          <mesh filename="package://omni_bot_description/description/stl/omni_wheel_152mm.stl"
+            scale="${encoder_scale} ${encoder_scale} ${encoder_scale}" />
         </geometry>
         <material name="dark_gray">
           <color rgba="0.35 0.35 0.35 1.0" />
@@ -209,7 +214,8 @@
       </visual>
       <collision>
         <geometry>
-          <cylinder radius="${wheel_radius * encoder_scale}" length="${(plate_gap + 2*roller_radius) * encoder_scale}" />
+          <cylinder radius="${wheel_radius * encoder_scale}"
+            length="${(plate_gap + 2*roller_radius) * encoder_scale}" />
         </geometry>
       </collision>
     </link>

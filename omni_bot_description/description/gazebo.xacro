@@ -16,9 +16,21 @@
       <joint_name>wheel_joint_2</joint_name>
     </plugin>
 
-    <!-- Gazebo ros2_control plugin -->
-    <plugin filename="gz_ros2_control-system" name="gz_ros2_control::GazeboSimROS2ControlPlugin">
-      <parameters>$(find omni_bot_sim)/config/omni_controller.yaml</parameters>
+    <!-- Gazebo Joint Controller (for controlling wheel joints) -->
+    <plugin filename="gz-sim-joint-controller-system" name="gz::sim::systems::JointController">
+      <topic>/omni_controller/commands/wheel_0</topic>
+      <joint_name>wheel_joint_0</joint_name>
+      <use_force_commands>true</use_force_commands>
+    </plugin>
+    <plugin filename="gz-sim-joint-controller-system" name="gz::sim::systems::JointController">
+      <topic>/omni_controller/commands/wheel_1</topic>
+      <joint_name>wheel_joint_1</joint_name>
+      <use_force_commands>true</use_force_commands>
+    </plugin>
+    <plugin filename="gz-sim-joint-controller-system" name="gz::sim::systems::JointController">
+      <topic>/omni_controller/commands/wheel_2</topic>
+      <joint_name>wheel_joint_2</joint_name>
+      <use_force_commands>true</use_force_commands>
     </plugin>
 
     <!-- IMU plugin -->

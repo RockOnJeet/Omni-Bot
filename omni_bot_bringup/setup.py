@@ -29,8 +29,8 @@ setup(
     },
     entry_points={
         'console_scripts': [
-            'odometry_node = omni_bot_odometry.odometry_node:main',
-            'kinematics_node = omni_bot_kinematics.kinematics_node:main',
+            'odometry_node = omni_bot_bringup.odometry_node:main',
+            'kinematics_node = omni_bot_bringup.kinematics_node:main',
         ],
     },
 )

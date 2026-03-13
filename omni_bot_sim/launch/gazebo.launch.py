@@ -98,15 +98,6 @@ def generate_launch_description():
         }.items()
     )
 
-    # ros2_control spawners
-    omni_controller_spawner = Node(
-        package='controller_manager',
-        executable='spawner',
-        arguments=['omni_controller'],
-        ros_arguments=['--remap', 'use_sim_time:=true'],
-        output='screen'
-    )
-
     # Static TF replacing URDF LiDAR frame (parity)
     tf2_lidar_broadcaster = Node(
         package='tf2_ros',
@@ -116,6 +107,15 @@ def generate_launch_description():
         # Source: src/omni_bot_description/description/gz_bot.urdf.xacro line 60
         arguments=['0', '0', '0.25', '0', '0',
                    '0', 'base_footprint', 'lidar_link'],
+        parameters=[{'use_sim_time': True}],
+        output='screen'
+    )
+
+    # Command converter for wheels
+    wheel_vel_pub = Node(
+        package='omni_bot_sim',
+        executable='wheel_vel_pub',
+        name='wheel_vel_publisher',
         parameters=[{'use_sim_time': True}],
         output='screen'
     )
@@ -130,6 +130,5 @@ def generate_launch_description():
         spawn_entity,
         ros_gz_bridge,
         rsp_launch,
-        # ros2_control spawners (after robot spawned)
-        omni_controller_spawner
+        wheel_vel_pub
     ])

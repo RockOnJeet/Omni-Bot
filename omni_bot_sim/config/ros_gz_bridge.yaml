@@ -32,6 +32,28 @@
   direction: GZ_TO_ROS
   lazy: false
 
+## Joint commands (power joints from ROS) - per wheel
+- ros_topic_name: "omni_controller/commands/wheel_0"
+  gz_topic_name: "omni_controller/commands/wheel_0"
+  ros_type_name: "std_msgs/msg/Float64"
+  gz_type_name: "gz.msgs.Double"
+  direction: ROS_TO_GZ
+  lazy: false
+
+- ros_topic_name: "omni_controller/commands/wheel_1"
+  gz_topic_name: "omni_controller/commands/wheel_1"
+  ros_type_name: "std_msgs/msg/Float64"
+  gz_type_name: "gz.msgs.Double"
+  direction: ROS_TO_GZ
+  lazy: false
+
+- ros_topic_name: "omni_controller/commands/wheel_2"
+  gz_topic_name: "omni_controller/commands/wheel_2"
+  ros_type_name: "std_msgs/msg/Float64"
+  gz_type_name: "gz.msgs.Double"
+  direction: ROS_TO_GZ
+  lazy: false
+
 ## LiDAR Scan Data
 ## CRITICAL: gz_topic_name must match <topic>scan</topic> in lidar sensor definition
 ## YDLiDAR G2: 360° FOV, 10 Hz update rate (simulated)

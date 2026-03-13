@@ -4,7 +4,7 @@
   <xacro:include filename="wheels.xacro" />
   <xacro:include filename="lidar.xacro" />
   <xacro:include filename="imu.xacro" />
-  <xacro:include filename="ros2_control.xacro" />
+  <!-- <xacro:include filename="ros2_control.xacro" /> -->
 
   <!--      Parameters (in SI)       -->
   <xacro:property name="base_side_length" value="1.05" />
@@ -42,7 +42,8 @@
     <inertial>
       <origin xyz="0.0 0.0 0.0" />
       <mass value="${base_mass}" />
-      <inertia ixx="0.1798003" ixy="0.0024346" ixz="-0.0001306" iyy="0.1827598" iyz="-0.0002425" izz="0.3538762" />
+      <inertia ixx="0.1798003" ixy="0.0024346" ixz="-0.0001306" iyy="0.1827598" iyz="-0.0002425"
+        izz="0.3538762" />
     </inertial>
   </link>
 
