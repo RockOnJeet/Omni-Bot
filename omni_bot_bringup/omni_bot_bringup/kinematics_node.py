@@ -32,7 +32,7 @@ class OmniKinematicsNode(Node):
         self.declare_parameter('wheel_radius', 0.076)  # meters
         self.declare_parameter('robot_radius', 0.4185)  # meters
         self.declare_parameter('max_wheel_velocity', 8.0)  # rad/s
-        self.declare_parameter('cmd_vel_timeout', 0.5)  # seconds
+        self.declare_parameter('cmd_vel_timeout', 1.0)  # seconds
 
         self.wheel_radius = self.get_parameter(
             'wheel_radius').get_parameter_value().double_value
@@ -159,9 +159,9 @@ class OmniKinematicsNode(Node):
         self.last_cmd_vel_time = self.get_clock().now()
 
         # Extract velocities from Twist message
-        vx = msg.linear.x  # m/s
-        vy = msg.linear.y  # m/s
-        omega = msg.angular.z  # rad/s
+        vx = msg.linear.x * 3.088  # m/s
+        vy = msg.linear.y * 3.55  # m/s
+        omega = msg.angular.z * 5.544  # rad/s
 
         # Compute wheel velocities
         front_vel, left_vel, right_vel = self.inverse_kinematics(vx, vy, omega)

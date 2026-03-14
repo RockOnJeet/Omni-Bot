@@ -37,8 +37,8 @@ def generate_launch_description():
         default_value=os.path.join(
             nav_pkg,
             'maps',
-            'custom',
-            'custom.yaml'
+            'rs_v2',
+            'rs_v2.yaml'
         ),
         description='Full path to map file to load'
     )
