@@ -1,0 +1,96 @@
+<robot xmlns:xacro="http://www.ros.org/wiki/xacro">
+  <gazebo>
+    <!-- Sensors System Plugin (required for IMU, LIDAR, etc.) -->
+    <plugin filename="gz-sim-sensors-system" name="gz::sim::systems::Sensors">
+      <render_engine>ogre2</render_engine>
+    </plugin>
+
+    <!-- Joint States Publisher (for encoders and other passive joints) -->
+    <plugin filename="gz-sim-joint-state-publisher-system"
+      name="gz::sim::systems::JointStatePublisher">
+      <topic>joint_states</topic>
+      <joint_name>encoder_joint_X</joint_name>
+      <joint_name>encoder_joint_Y</joint_name>
+      <joint_name>wheel_joint_0</joint_name>
+      <joint_name>wheel_joint_1</joint_name>
+      <joint_name>wheel_joint_2</joint_name>
+    </plugin>
+
+    <!-- Gazebo Joint Controller (for controlling wheel joints) -->
+    <plugin filename="gz-sim-joint-controller-system" name="gz::sim::systems::JointController">
+      <topic>/omni_controller/commands/wheel_0</topic>
+      <joint_name>wheel_joint_0</joint_name>
+      <use_force_commands>true</use_force_commands>
+    </plugin>
+    <plugin filename="gz-sim-joint-controller-system" name="gz::sim::systems::JointController">
+      <topic>/omni_controller/commands/wheel_1</topic>
+      <joint_name>wheel_joint_1</joint_name>
+      <use_force_commands>true</use_force_commands>
+    </plugin>
+    <plugin filename="gz-sim-joint-controller-system" name="gz::sim::systems::JointController">
+      <topic>/omni_controller/commands/wheel_2</topic>
+      <joint_name>wheel_joint_2</joint_name>
+      <use_force_commands>true</use_force_commands>
+    </plugin>
+
+    <!-- IMU plugin -->
+    <plugin filename="gz-sim-imu-system" name="gz::sim::systems::Imu">
+    </plugin>
+
+  </gazebo>
+
+  <!-- Ideal IMU attached to imu_link -->
+  <gazebo reference="imu_link">
+    <sensor name="imu_sensor" type="imu">
+      <topic>imu</topic>
+      <always_on>true</always_on>
+      <update_rate>200</update_rate>
+      <visualize>true</visualize>
+      <pose>0 0 0 0 0 0</pose>
+      <imu>
+        <!-- Ideal IMU: no noise configured -->
+      </imu>
+    </sensor>
+  </gazebo>
+
+  <!-- YDLiDAR G2 360° 2D LiDAR Sensor attached to lidar_link -->
+  <gazebo reference="lidar_link">
+    <material>Gazebo/Black</material>
+
+    <!-- YDLiDAR G2 Hardware Characteristics:
+         - Field of View: 360° (full continuous rotation)
+         - Motor Speed: ~8 Hz (480 RPM)
+         - Sampling Rate: ~5000 samples/second
+         - Angular Resolution: ~0.36°
+         - Range: 0.12m to 12.0m
+         - Communication: UART via USB-TTL @ 230400 bps (plug-and-play)
+    -->
+    <!-- Type: gpu_lidar (not ray or lidar) for modern Gazebo (Harmonic/Garden) -->
+    <sensor name="lidar_sensor" type="gpu_lidar">
+      <pose>0 0 0 0 0 0</pose>
+      <visualize>true</visualize>
+      <update_rate>10</update_rate>
+      <topic>scan</topic>
+
+      <!-- CRITICAL: Sets the frame_id in LaserScan messages -->
+      <!-- MUST match the link name (lidar_link) for TF consistency -->
+      <!-- Without this, Gazebo auto-generates frame like robot_name/parent_link/sensor_name -->
+      <gz_frame_id>lidar_link</gz_frame_id>
+      <lidar>
+        <scan>
+          <horizontal>
+            <samples>360</samples>
+            <min_angle>-3.14159</min_angle>
+            <max_angle>3.14159</max_angle>
+          </horizontal>
+        </scan>
+        <range>
+          <!-- YDLiDAR G2 Range: 0.12m to 12.0m -->
+          <min>0.12</min>
+          <max>12.0</max>
+        </range>
+      </lidar>
+    </sensor>
+  </gazebo>
+
+</robot>

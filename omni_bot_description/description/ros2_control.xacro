@@ -1,0 +1,46 @@
+<?xml version="1.0"?>
+<robot xmlns:xacro="http://www.ros.org/wiki/xacro">
+
+  <!-- 
+    ros2_control configuration for Omni-Bot
+    Defines hardware interfaces for 3 omni wheels ONLY.
+    
+    Encoder states are published directly by Gazebo plugin (gazebo.xacro)
+    to avoid duplication and ensure single source of truth.
+  -->
+
+  <ros2_control name="OmniHardware" type="system">
+    <hardware>
+      <!-- Gazebo simulator plugin (for simulation only) -->
+      <plugin>gz_ros2_control/GazeboSimSystem</plugin>
+    </hardware>
+
+    <!-- Wheel joints: velocity command interfaces only -->
+    <!-- wheel_joint_0: right wheel (0° angle) -->
+    <!-- wheel_joint_1: front wheel (120° angle) -->
+    <!-- wheel_joint_2: left wheel (240° angle) -->
+
+    <joint name="wheel_joint_0">
+      <command_interface name="velocity">
+        <param name="min">-28.0</param>
+        <param name="max">28.0</param>
+      </command_interface>
+    </joint>
+
+    <joint name="wheel_joint_1">
+      <command_interface name="velocity">
+        <param name="min">-28.0</param>
+        <param name="max">28.0</param>
+      </command_interface>
+    </joint>
+
+    <joint name="wheel_joint_2">
+      <command_interface name="velocity">
+        <param name="min">-28.0</param>
+        <param name="max">28.0</param>
+      </command_interface>
+    </joint>
+
+    <!-- Encoder joints: Handled by Joint State Publisher plugin in gazebo.xacro -->
+  </ros2_control>
+</robot>
