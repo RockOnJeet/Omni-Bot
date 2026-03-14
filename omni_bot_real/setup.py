@@ -11,7 +11,7 @@ setup(
             ['resource/' + package_name]),
         ('share/' + package_name, ['package.xml']),
         ('share/' + package_name + '/launch',
-         ['launch/omni_bot_real_launch.py']),
+         ['launch/real.launch.py']),
     ],
     install_requires=['setuptools'],
     zip_safe=True,
