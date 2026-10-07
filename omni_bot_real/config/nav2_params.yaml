@@ -15,7 +15,7 @@ amcl:
     lambda_short: 0.1
     laser_likelihood_max_dist: 2.0
     laser_max_range: 6.0
-    laser_min_range: -1.0
+    laser_min_range: 0.5
     laser_model_type: "likelihood_field"
     max_beams: 60
     max_particles: 2000
@@ -158,9 +158,9 @@ controller_server:
       decel_lim_x: -2.5
       decel_lim_y: -2.5
       decel_lim_theta: -0.75
-      vx_samples: 20
-      vy_samples: 20
-      vtheta_samples: 20
+      vx_samples: 2
+      vy_samples: 2
+      vtheta_samples: 15
       sim_time: 1.5
       linear_granularity: 0.05
       angular_granularity: 0.025
@@ -176,10 +176,10 @@ controller_server:
       GoalAlign.scale: 24.0
       GoalAlign.forward_point_distance: 0.1
       PathDist.scale: 32.0
-      GoalDist.scale: 24.0
-      RotateToGoal.scale: 25.0
-      RotateToGoal.slowing_factor: 4.5
-      RotateToGoal.lookahead_time: 0.5
+      GoalDist.scale: 32.0
+      RotateToGoal.scale: 15.0
+      RotateToGoal.slowing_factor: 0.5
+      RotateToGoal.lookahead_time: -1.0
 
 local_costmap:
   local_costmap:
