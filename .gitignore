@@ -1,0 +1,96 @@
+# ==========================================
+# ROS 2 Build & Workspace Directories
+# ==========================================
+build/
+install/
+log/
+.colcon/
+
+# ==========================================
+# C / C++ / CMake Artifacts
+# ==========================================
+*.o
+*.obj
+*.so
+*.dylib
+*.a
+*.la
+*.lo
+*.exe
+CMakeFiles/
+CMakeCache.txt
+cmake_install.cmake
+Makefile
+*.cmake.in
+
+# ==========================================
+# Python Artifacts & Environments
+# ==========================================
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+env/
+venv/
+ENV/
+.venv/
+build/
+develop-eggs/
+dist/
+downloads/
+eggs/
+.eggs/
+lib/
+lib64/
+parts/
+sdist/
+var/
+wheels/
+*.egg-info/
+.installed.cfg
+*.egg
+
+# ==========================================
+# ROS 2 Log & Data Files
+# ==========================================
+*.log
+*.bag
+*.db3
+*.metadata
+
+# ==========================================
+# IDE & Editor Files
+# ==========================================
+# VS Code
+.vscode/
+!.vscode/tasks.json
+!.vscode/launch.json
+!.vscode/settings.json
+
+# CLion / JetBrains
+.idea/
+cmake-build-*/
+
+# Eclipse
+.cproject
+.project
+.settings/
+
+# QtCreator
+*.user
+
+# Vim / Emacs
+*~
+*.swp
+*.swo
+
+# ==========================================
+# OS & Miscellaneous
+# ==========================================
+.DS_Store
+.DS_Store?
+._*
+.Trashes
+ehthumbs.db
+Thumbs.db
