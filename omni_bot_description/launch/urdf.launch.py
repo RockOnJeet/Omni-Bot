@@ -1,0 +1,114 @@
+import os
+
+from ament_index_python.packages import get_package_share_directory
+
+from launch import LaunchDescription
+from launch.actions import DeclareLaunchArgument
+from launch.conditions import IfCondition
+from launch.substitutions import LaunchConfiguration
+from launch_ros.actions import Node
+
+import xacro
+
+
+def generate_launch_description():
+    # Get package share directory (Modify if your package name is different)
+    path = get_package_share_directory('omni_bot_description')
+
+    # Arguments
+    use_sim_time = LaunchConfiguration('use_sim_time')
+    time_arg = DeclareLaunchArgument(
+        name='use_sim_time',
+        default_value='false',
+        description='Use simulation/Gazebo clock'
+    )
+
+    use_rviz = LaunchConfiguration('use_rviz')
+    rviz_arg = DeclareLaunchArgument(
+        name='use_rviz',
+        default_value='true',
+        description='Whether to start rviz'
+    )
+
+    use_jsp = LaunchConfiguration('use_joint_state_publisher_gui')
+    jsp_arg = DeclareLaunchArgument(
+        name='use_joint_state_publisher_gui',
+        default_value='true',
+        description='Whether to start joint_state_publisher_gui'
+    )
+
+    # use_model = LaunchConfiguration('model')
+    model_arg = DeclareLaunchArgument(
+        name='model',
+        default_value='rviz',
+        description='Spawns "rviz" (default) or "gz" model.'
+    )
+
+    use_rviz_path = LaunchConfiguration('use_rviz_path')
+    path_arg = DeclareLaunchArgument(
+        name='use_rviz_path',
+        default_value=os.path.join(
+            path,
+            'config',
+            'rviz',
+            'urdf_view.rviz'
+        ),
+        description='Path to the RViz configuration file'
+    )
+
+    # RViz
+    rviz_node = Node(
+        package='rviz2',
+        executable='rviz2',
+        name='rviz2',
+
+        output='screen',
+        arguments=['-d', use_rviz_path],
+        parameters=[{'use_sim_time': use_sim_time}],
+        condition=IfCondition(use_rviz)
+    )
+
+    # XACRO -> URDF conversion
+    # TODO: Setup `use_model` and make it dynamically change which model is loaded.
+    bot_xacro = os.path.join(
+        path,
+        'description',
+        'rviz_bot.urdf.xacro'
+    )
+    bot_urdf = xacro.process_file(bot_xacro).toxml()  # type: ignore
+
+    # Robot State Publisher
+    robot_state_publisher_node = Node(
+        package='robot_state_publisher',
+        executable='robot_state_publisher',
+        name='robot_state_publisher',
+
+        output='screen',
+        parameters=[{'robot_description': bot_urdf,
+                     'use_sim_time': use_sim_time}]
+    )
+
+    # Joint State Publisher GUI
+    jsp_gui_node = Node(
+        package='joint_state_publisher_gui',
+        executable='joint_state_publisher_gui',
+        name='joint_state_publisher',
+
+        output='screen',
+        condition=IfCondition(use_jsp)
+    )
+
+    # Launch!
+    return LaunchDescription([
+        # Arguments
+        time_arg,
+        rviz_arg,
+        path_arg,
+        jsp_arg,
+        model_arg,
+
+        # Nodes
+        robot_state_publisher_node,
+        rviz_node,
+        jsp_gui_node
+    ])

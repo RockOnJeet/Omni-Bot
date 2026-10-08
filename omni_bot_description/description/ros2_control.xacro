@@ -1,0 +1,27 @@
+<?xml version="1.0"?>
+<robot xmlns:xacro="http://www.ros.org/wiki/xacro">
+  <ros2_control name="GzSystem" type="system">
+    <hardware>
+      <plugin>gz_ros2_control/GazeboSimSystem</plugin>
+    </hardware>
+    <joint name="wheel_joint_0">
+      <command_interface name="velocity" />   <!-- Inaccurate; should be `effort`.-->
+      <state_interface name="position" />
+    </joint>
+    <joint name="wheel_joint_1">
+      <command_interface name="velocity" />   <!-- Inaccurate; should be `effort`.-->
+      <state_interface name="position" />
+    </joint>
+    <joint name="wheel_joint_2">
+      <command_interface name="velocity" />   <!-- Inaccurate; should be `effort`.-->
+      <state_interface name="position" />
+    </joint>
+    <joint name="encoder_joint_X">
+      <state_interface name="position" />
+    </joint>
+    <joint name="encoder_joint_Y">
+      <state_interface name="position" />
+    </joint>
+  </ros2_control>
+  
+</robot>

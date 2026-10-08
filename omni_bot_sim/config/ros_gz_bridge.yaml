@@ -1,0 +1,45 @@
+# ROS-Gazebo Bridge Configuration File
+# This file defines the topics to be bridged between ROS 2 and Gazebo (Ignition).
+# Each entry specifies the ROS topic name, Gazebo topic name, message types,
+# direction of data flow, and whether the bridge should be lazy-loaded.
+
+## Clock (unidirectional from Gazebo -> ROS)
+## CRITICAL: Enables sim_time for synchronization across ROS 2 nodes
+- ros_topic_name: "clock"
+  gz_topic_name: "clock"
+  ros_type_name: "rosgraph_msgs/msg/Clock"
+  gz_type_name: "gz.msgs.Clock"
+  direction: GZ_TO_ROS
+  lazy: false
+
+## Joint states (unidirectional from Gazebo -> ROS) [NOT NEEDED DUE TO ROS2 CONTROL]
+# - ros_topic_name: "joint_states"
+#   gz_topic_name: "joint_states"
+#   ros_type_name: "sensor_msgs/msg/JointState"
+#   gz_type_name: "gz.msgs.Model"
+#   direction: GZ_TO_ROS
+#   lazy: false
+
+## Twist Command (velocity control)
+## BIDIRECTIONAL: allows both ROS and Gazebo to control robot velocity
+- ros_topic_name: "cmd_vel"
+  gz_topic_name: "cmd_vel"
+  ros_type_name: "geometry_msgs/msg/Twist"
+  gz_type_name: "gz.msgs.Twist"
+  direction: BIDIRECTIONAL
+  lazy: true
+
+## Joint Command (force control) [NOT NEEDED DUE TO ROS2 CONTROL]
+## UNIDIRECTIONAL: allows ROS to send joint commands to Gazebo
+# - ros_topic_name: "joint_control"
+#   gz_topic_name: "/model/omni_bot/joint/base_joint/cmd_force"
+#   ros_type_name: "std_msgs/msg/Float64"
+#   gz_type_name: "gz.msgs.Double"
+#   direction: ROS_TO_GZ
+#   lazy: false
+
+## Services for controlling the simulation world
+- service_name: "/world/empty/control"
+  ros_type_name: "ros_gz_interfaces/srv/ControlWorld"
+  gz_req_type_name: "gz.msgs.WorldControl"
+  gz_rep_type_name: "gz.msgs.Boolean"
